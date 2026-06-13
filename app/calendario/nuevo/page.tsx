@@ -87,10 +87,10 @@ export default function NuevoEventoPage() {
         <h1 className="text-2xl font-bold">Nuevo Evento</h1>
       </div>
 
-      <Card className="bg-[#1e2a3b] border-[#2a3a4b] max-w-2xl mx-auto">
+      <Card className="bg-[#ffffff] border-[#cfe8d8] max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-lg">Información del Evento</CardTitle>
-          <CardDescription className="text-gray-400">Ingresa los detalles del nuevo evento</CardDescription>
+          <CardDescription className="text-[#5f756b]">Ingresa los detalles del nuevo evento</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -100,7 +100,7 @@ export default function NuevoEventoPage() {
                 id="title"
                 name="title"
                 placeholder="Título del evento"
-                className="bg-[#0a1525] border-[#2a3a4b]"
+                className="bg-[#f6fbf7] border-[#cfe8d8]"
                 value={formData.title}
                 onChange={handleChange}
                 required
@@ -113,7 +113,7 @@ export default function NuevoEventoPage() {
                 id="description"
                 name="description"
                 placeholder="Descripción del evento"
-                className="bg-[#0a1525] border-[#2a3a4b] min-h-[100px]"
+                className="bg-[#f6fbf7] border-[#cfe8d8] min-h-[100px]"
                 value={formData.description}
                 onChange={handleChange}
               />
@@ -126,7 +126,7 @@ export default function NuevoEventoPage() {
                   id="start_date"
                   name="start_date"
                   type="date"
-                  className="bg-[#0a1525] border-[#2a3a4b]"
+                  className="bg-[#f6fbf7] border-[#cfe8d8]"
                   value={formData.start_date}
                   onChange={handleChange}
                   required
@@ -139,7 +139,7 @@ export default function NuevoEventoPage() {
                   id="start_time"
                   name="start_time"
                   type="time"
-                  className="bg-[#0a1525] border-[#2a3a4b]"
+                  className="bg-[#f6fbf7] border-[#cfe8d8]"
                   value={formData.start_time}
                   onChange={handleChange}
                   required
@@ -154,7 +154,7 @@ export default function NuevoEventoPage() {
                   id="end_date"
                   name="end_date"
                   type="date"
-                  className="bg-[#0a1525] border-[#2a3a4b]"
+                  className="bg-[#f6fbf7] border-[#cfe8d8]"
                   value={formData.end_date}
                   onChange={handleChange}
                   required
@@ -167,7 +167,7 @@ export default function NuevoEventoPage() {
                   id="end_time"
                   name="end_time"
                   type="time"
-                  className="bg-[#0a1525] border-[#2a3a4b]"
+                  className="bg-[#f6fbf7] border-[#cfe8d8]"
                   value={formData.end_time}
                   onChange={handleChange}
                   required
@@ -178,10 +178,10 @@ export default function NuevoEventoPage() {
             <div className="space-y-2">
               <Label htmlFor="event_type">Tipo de evento</Label>
               <Select defaultValue="meeting" onValueChange={(value) => handleSelectChange("event_type", value)}>
-                <SelectTrigger className="bg-[#0a1525] border-[#2a3a4b]">
+                <SelectTrigger className="bg-[#f6fbf7] border-[#cfe8d8]">
                   <SelectValue placeholder="Selecciona un tipo" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1e2a3b] border-[#2a3a4b]">
+                <SelectContent className="bg-[#ffffff] border-[#cfe8d8]">
                   <SelectItem value="meeting">Reunión</SelectItem>
                   <SelectItem value="call">Llamada</SelectItem>
                   <SelectItem value="task">Tarea</SelectItem>
@@ -190,7 +190,7 @@ export default function NuevoEventoPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline" className="border-[#2a3a4b]" type="button" asChild>
+            <Button variant="outline" className="border-[#cfe8d8]" type="button" asChild>
               <Link href="/calendario">Cancelar</Link>
             </Button>
             <Button type="submit" disabled={isLoading} className="gap-2">

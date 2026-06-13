@@ -25,9 +25,13 @@ export type EventParticipant = {
 }
 
 export async function getCalendarEvents(startDate: string, endDate: string): Promise<CalendarEvent[]> {
-  const supabase = createServerSupabaseClient()
-
   try {
+    const supabase = createServerSupabaseClient({ required: false })
+
+    if (!supabase) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
@@ -53,7 +57,11 @@ export async function getCalendarEvents(startDate: string, endDate: string): Pro
 }
 
 export async function getEventById(id: string): Promise<CalendarEvent | null> {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient({ required: false })
+
+  if (!supabase) {
+    return null
+  }
 
   const { data, error } = await supabase.from("calendar_events").select("*").eq("id", id).single()
 

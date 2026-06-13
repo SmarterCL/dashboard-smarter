@@ -14,9 +14,13 @@ export type Client = {
 }
 
 export async function getClients(): Promise<Client[]> {
-  const supabase = createServerSupabaseClient()
-
   try {
+    const supabase = createServerSupabaseClient({ required: false })
+
+    if (!supabase) {
+      return []
+    }
+
     const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false })
 
     if (error) {
@@ -36,7 +40,11 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function getClientById(id: string): Promise<Client | null> {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient({ required: false })
+
+  if (!supabase) {
+    return null
+  }
 
   const { data, error } = await supabase.from("clients").select("*").eq("id", id).single()
 

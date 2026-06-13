@@ -159,17 +159,17 @@ export default function ChatPage() {
   return (
     <div className="flex-1 flex h-[calc(100vh-4rem)]">
       {/* Panel de chats */}
-      <div className="w-80 border-r border-[#1e2a3b] flex flex-col bg-[#0a1525]">
-        <div className="p-4 border-b border-[#1e2a3b]">
+      <div className="w-80 border-r border-[#ffffff] flex flex-col bg-[#f6fbf7]">
+        <div className="p-4 border-b border-[#ffffff]">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-            <Input type="search" placeholder="Buscar chat..." className="pl-8 bg-[#1e2a3b] border-[#2a3a4b]" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#5f756b]" />
+            <Input type="search" placeholder="Buscar chat..." className="pl-8 bg-[#ffffff] border-[#cfe8d8]" />
           </div>
         </div>
 
         <Tabs defaultValue="todos" className="flex-1 flex flex-col">
           <div className="px-2 pt-2">
-            <TabsList className="bg-[#1e2a3b] w-full">
+            <TabsList className="bg-[#ffffff] w-full">
               <TabsTrigger value="todos" className="flex-1">
                 Todos
               </TabsTrigger>
@@ -186,7 +186,7 @@ export default function ChatPage() {
             {chats.map((chat) => (
               <div
                 key={chat.id}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#1e2a3b] ${chatActivo === chat.id ? "bg-[#1e2a3b]" : ""}`}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#ffffff] ${chatActivo === chat.id ? "bg-[#ffffff]" : ""}`}
                 onClick={() => setChatActivo(chat.id)}
               >
                 <div className="relative">
@@ -198,17 +198,17 @@ export default function ChatPage() {
                     <AvatarFallback>{chat.nombre.charAt(0)}</AvatarFallback>
                   </Avatar>
                   {chat.online && (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-[#0a1525]"></span>
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-[#f6fbf7]"></span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium truncate">{chat.nombre}</h3>
-                    <span className="text-xs text-gray-400">{chat.hora}</span>
+                    <span className="text-xs text-[#5f756b]">{chat.hora}</span>
                   </div>
-                  <p className="text-sm text-gray-400 truncate">{chat.ultimoMensaje}</p>
+                  <p className="text-sm text-[#5f756b] truncate">{chat.ultimoMensaje}</p>
                 </div>
-                {chat.noLeidos > 0 && <Badge className="bg-blue-500 text-white">{chat.noLeidos}</Badge>}
+                {chat.noLeidos > 0 && <Badge className="bg-green-500 text-white">{chat.noLeidos}</Badge>}
               </div>
             ))}
           </TabsContent>
@@ -219,7 +219,7 @@ export default function ChatPage() {
               .map((chat) => (
                 <div
                   key={chat.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#1e2a3b] ${chatActivo === chat.id ? "bg-[#1e2a3b]" : ""}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#ffffff] ${chatActivo === chat.id ? "bg-[#ffffff]" : ""}`}
                   onClick={() => setChatActivo(chat.id)}
                 >
                   <Avatar className="h-10 w-10">
@@ -232,22 +232,22 @@ export default function ChatPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
                       <h3 className="font-medium truncate">{chat.nombre}</h3>
-                      <span className="text-xs text-gray-400">{chat.hora}</span>
+                      <span className="text-xs text-[#5f756b]">{chat.hora}</span>
                     </div>
-                    <p className="text-sm text-gray-400 truncate">{chat.ultimoMensaje}</p>
+                    <p className="text-sm text-[#5f756b] truncate">{chat.ultimoMensaje}</p>
                   </div>
-                  <Badge className="bg-blue-500 text-white">{chat.noLeidos}</Badge>
+                  <Badge className="bg-green-500 text-white">{chat.noLeidos}</Badge>
                 </div>
               ))}
           </TabsContent>
 
           <TabsContent value="grupos" className="flex-1 overflow-y-auto p-2 m-0">
             <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <div className="h-16 w-16 rounded-full bg-[#1e2a3b] flex items-center justify-center mb-4">
-                <Users className="h-8 w-8 text-gray-400" />
+              <div className="h-16 w-16 rounded-full bg-[#ffffff] flex items-center justify-center mb-4">
+                <Users className="h-8 w-8 text-[#5f756b]" />
               </div>
               <h3 className="font-medium">No hay grupos</h3>
-              <p className="text-sm text-gray-400 mt-1">Crea un grupo para chatear con varias personas a la vez</p>
+              <p className="text-sm text-[#5f756b] mt-1">Crea un grupo para chatear con varias personas a la vez</p>
               <Button className="mt-4 gap-2">
                 <Plus className="h-4 w-4" />
                 Crear grupo
@@ -258,11 +258,11 @@ export default function ChatPage() {
       </div>
 
       {/* Panel de chat activo */}
-      <div className="flex-1 flex flex-col bg-[#0a1525]">
+      <div className="flex-1 flex flex-col bg-[#f6fbf7]">
         {chatActual ? (
           <>
             {/* Cabecera del chat */}
-            <div className="flex items-center justify-between p-4 border-b border-[#1e2a3b]">
+            <div className="flex items-center justify-between p-4 border-b border-[#ffffff]">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
@@ -273,7 +273,7 @@ export default function ChatPage() {
                 </Avatar>
                 <div>
                   <h2 className="font-medium">{chatActual.nombre}</h2>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-[#5f756b]">
                     {chatActual.online ? "En línea" : "Último acceso hace 2 horas"}
                   </p>
                 </div>
@@ -294,13 +294,13 @@ export default function ChatPage() {
                       <MoreVertical className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-[#1e2a3b] border-[#2a3a4b]">
+                  <DropdownMenuContent align="end" className="bg-[#ffffff] border-[#cfe8d8]">
                     <DropdownMenuLabel>Opciones</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+                    <DropdownMenuSeparator className="bg-[#cfe8d8]" />
                     <DropdownMenuItem>Ver información de contacto</DropdownMenuItem>
                     <DropdownMenuItem>Silenciar notificaciones</DropdownMenuItem>
                     <DropdownMenuItem>Buscar en la conversación</DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+                    <DropdownMenuSeparator className="bg-[#cfe8d8]" />
                     <DropdownMenuItem className="text-red-400">Eliminar chat</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -316,13 +316,13 @@ export default function ChatPage() {
                 <div key={msg.id} className={`flex ${msg.remitente === "yo" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[70%] rounded-lg p-3 ${
-                      msg.remitente === "yo" ? "bg-blue-600 text-white rounded-br-none" : "bg-[#1e2a3b] rounded-bl-none"
+                      msg.remitente === "yo" ? "bg-green-600 text-white rounded-br-none" : "bg-[#ffffff] rounded-bl-none"
                     }`}
                   >
                     <p>{msg.texto}</p>
                     <div
                       className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-                        msg.remitente === "yo" ? "text-blue-200" : "text-gray-400"
+                        msg.remitente === "yo" ? "text-green-100" : "text-[#5f756b]"
                       }`}
                     >
                       <span>{msg.hora}</span>
@@ -336,7 +336,7 @@ export default function ChatPage() {
             </div>
 
             {/* Entrada de mensaje */}
-            <div className="p-4 border-t border-[#1e2a3b]">
+            <div className="p-4 border-t border-[#ffffff]">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-10 w-10">
                   <Smile className="h-5 w-5" />
@@ -349,7 +349,7 @@ export default function ChatPage() {
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleEnviarMensaje()}
-                  className="flex-1 bg-[#1e2a3b] border-[#2a3a4b]"
+                  className="flex-1 bg-[#ffffff] border-[#cfe8d8]"
                 />
                 <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleEnviarMensaje}>
                   <Send className="h-5 w-5" />
@@ -362,11 +362,11 @@ export default function ChatPage() {
           </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <div className="h-20 w-20 rounded-full bg-[#1e2a3b] flex items-center justify-center mb-4">
-              <MessageSquare className="h-10 w-10 text-gray-400" />
+            <div className="h-20 w-20 rounded-full bg-[#ffffff] flex items-center justify-center mb-4">
+              <MessageSquare className="h-10 w-10 text-[#5f756b]" />
             </div>
             <h2 className="text-xl font-medium">Selecciona un chat</h2>
-            <p className="text-gray-400 mt-2 max-w-md">
+            <p className="text-[#5f756b] mt-2 max-w-md">
               Elige una conversación de la lista o inicia una nueva para comenzar a chatear
             </p>
             <Button className="mt-6 gap-2">

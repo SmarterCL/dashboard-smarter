@@ -52,17 +52,17 @@ export default function SeedDatabasePage() {
         <h1 className="text-2xl font-bold">Poblar Base de Datos</h1>
       </div>
 
-      <Card className="bg-[#1e2a3b] border-[#2a3a4b] max-w-2xl mx-auto">
+      <Card className="bg-[#ffffff] border-[#cfe8d8] max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-lg">Datos de Ejemplo</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-[#5f756b]">
             Ejecuta este script para poblar la base de datos con información de ejemplo para clientes, eventos, mensajes
             y estadísticas.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-300">Este proceso creará:</p>
-          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300">
+          <p className="text-sm text-[#41564a]">Este proceso creará:</p>
+          <ul className="list-disc pl-5 space-y-1 text-sm text-[#41564a]">
             <li>5 clientes de ejemplo con diferentes estados</li>
             <li>Mensajes de WhatsApp entre clientes y el sistema</li>
             <li>Eventos en el calendario para los próximos días</li>
@@ -98,7 +98,7 @@ export default function SeedDatabasePage() {
           )}
         </CardContent>
         <CardFooter className="flex justify-end gap-2">
-          <Button variant="outline" className="border-[#2a3a4b]" asChild>
+          <Button variant="outline" className="border-[#cfe8d8]" asChild>
             <Link href="/">Cancelar</Link>
           </Button>
           <Button onClick={handleSeedDatabase} disabled={isLoading} className="gap-2" aria-busy={isLoading}>

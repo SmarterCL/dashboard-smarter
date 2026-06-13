@@ -10,7 +10,11 @@ export type Statistic = {
 }
 
 export async function getStatistics(metricName: string, days = 7): Promise<Statistic[]> {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient({ required: false })
+
+  if (!supabase) {
+    return []
+  }
 
   // Calcular la fecha de inicio (hace X días)
   const startDate = new Date()
@@ -50,7 +54,11 @@ export async function recordStatistic(statistic: Omit<Statistic, "id" | "created
 }
 
 export async function getDailyStatistics(): Promise<any> {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient({ required: false })
+
+  if (!supabase) {
+    return {}
+  }
 
   // Obtener estadísticas del día actual
   const today = new Date().toISOString().split("T")[0]

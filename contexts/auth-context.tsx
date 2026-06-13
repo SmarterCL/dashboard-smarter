@@ -23,9 +23,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClientSupabaseClient()
+  const supabase = createClientSupabaseClient({ required: false })
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false)
+      return
+    }
+
     const getSession = async () => {
       setIsLoading(true)
       try {
@@ -59,9 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [router, supabase.auth])
+  }, [router, supabase])
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { error: new Error("Supabase no está configurado") }
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       return { error }
@@ -72,6 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error("Supabase no está configurado") }
+    }
+
     try {
       const { data, error } = await supabase.auth.signUp({ email, password })
       return { data, error }
@@ -82,6 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      router.push("/login")
+      return
+    }
+
     try {
       await supabase.auth.signOut()
       router.push("/login")
@@ -91,6 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return { error: new Error("Supabase no está configurado") }
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -103,6 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithOAuth = async (provider: "google" | "github") => {
+    if (!supabase) {
+      return { error: new Error("Supabase no está configurado") }
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,

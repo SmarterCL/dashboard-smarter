@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const supabase = useMemo(() => createClientSupabaseClient(), [])
+  const supabase = useMemo(() => createClientSupabaseClient({ required: false }), [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.substring(1))
@@ -44,6 +44,11 @@ export default function ResetPasswordPage() {
     setIsLoading(true)
 
     try {
+      if (!supabase) {
+        setError("Supabase no está configurado")
+        return
+      }
+
       const { error } = await supabase.auth.updateUser({ password })
 
       if (error) {

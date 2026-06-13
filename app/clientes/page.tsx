@@ -24,7 +24,7 @@ export default async function ClientesPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Clientes</h1>
-          <p className="text-gray-400">Gestiona tus contactos y clientes</p>
+          <p className="text-[#5f756b]">Gestiona tus contactos y clientes</p>
         </div>
         <div className="flex gap-2">
           <Button className="gap-2">
@@ -34,22 +34,22 @@ export default async function ClientesPage() {
         </div>
       </div>
 
-      <Card className="bg-[#1e2a3b] border-[#2a3a4b] mb-6">
+      <Card className="bg-[#ffffff] border-[#cfe8d8] mb-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Resumen de Clientes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-[#0a1525] p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Total Clientes</p>
+            <div className="bg-[#f6fbf7] p-4 rounded-lg">
+              <p className="text-[#5f756b] text-sm">Total Clientes</p>
               <p className="text-2xl font-bold">{clients.length}</p>
             </div>
-            <div className="bg-[#0a1525] p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Activos</p>
+            <div className="bg-[#f6fbf7] p-4 rounded-lg">
+              <p className="text-[#5f756b] text-sm">Activos</p>
               <p className="text-2xl font-bold">{clients.filter((c) => c.status === "active").length}</p>
             </div>
-            <div className="bg-[#0a1525] p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Nuevos (este mes)</p>
+            <div className="bg-[#f6fbf7] p-4 rounded-lg">
+              <p className="text-[#5f756b] text-sm">Nuevos (este mes)</p>
               <p className="text-2xl font-bold">
                 {
                   clients.filter((c) => {
@@ -60,32 +60,32 @@ export default async function ClientesPage() {
                 }
               </p>
             </div>
-            <div className="bg-[#0a1525] p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Pendientes</p>
+            <div className="bg-[#f6fbf7] p-4 rounded-lg">
+              <p className="text-[#5f756b] text-sm">Pendientes</p>
               <p className="text-2xl font-bold">{clients.filter((c) => c.status === "pending").length}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-[#1e2a3b] border-[#2a3a4b]">
+      <Card className="bg-[#ffffff] border-[#cfe8d8]">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <CardTitle className="text-lg">Lista de Clientes</CardTitle>
             <div className="flex gap-2 flex-wrap">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#5f756b]" />
                 <Input
                   type="search"
                   placeholder="Buscar cliente..."
-                  className="w-full md:w-64 pl-8 bg-[#0a1525] border-[#2a3a4b]"
+                  className="w-full md:w-64 pl-8 bg-[#f6fbf7] border-[#cfe8d8]"
                 />
               </div>
-              <Button variant="outline" className="border-[#2a3a4b] gap-2">
+              <Button variant="outline" className="border-[#cfe8d8] gap-2">
                 <Filter className="h-4 w-4" />
                 Filtrar
               </Button>
-              <Button variant="outline" className="border-[#2a3a4b] gap-2">
+              <Button variant="outline" className="border-[#cfe8d8] gap-2">
                 <Download className="h-4 w-4" />
                 Exportar
               </Button>
@@ -94,8 +94,8 @@ export default async function ClientesPage() {
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader className="bg-[#0a1525]">
-              <TableRow className="hover:bg-[#0a1525]/80 border-[#2a3a4b]">
+            <TableHeader className="bg-[#f6fbf7]">
+              <TableRow className="hover:bg-[#f6fbf7]/80 border-[#cfe8d8]">
                 <TableHead className="w-[50px]" scope="col">
                   #
                 </TableHead>
@@ -115,7 +115,7 @@ export default async function ClientesPage() {
             </TableHeader>
             <TableBody>
               {clients.map((client, index) => (
-                <TableRow key={client.id} className="hover:bg-[#0a1525]/50 border-[#2a3a4b]">
+                <TableRow key={client.id} className="hover:bg-[#f6fbf7]/50 border-[#cfe8d8]">
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -135,13 +135,13 @@ export default async function ClientesPage() {
                     <div className="space-y-1">
                       {client.email && (
                         <div className="flex items-center gap-1 text-sm">
-                          <Mail className="h-3 w-3 text-gray-400" />
+                          <Mail className="h-3 w-3 text-[#5f756b]" />
                           <span>{client.email}</span>
                         </div>
                       )}
                       {client.phone && (
                         <div className="flex items-center gap-1 text-sm">
-                          <Phone className="h-3 w-3 text-gray-400" />
+                          <Phone className="h-3 w-3 text-[#5f756b]" />
                           <span>{client.phone}</span>
                         </div>
                       )}
@@ -153,7 +153,7 @@ export default async function ClientesPage() {
                         client.status === "active"
                           ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
                           : client.status === "inactive"
-                            ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
+                            ? "bg-gray-500/20 text-[#5f756b] hover:bg-gray-500/30"
                             : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
                       }
                     >
@@ -182,13 +182,13 @@ export default async function ClientesPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#1e2a3b] border-[#2a3a4b]">
+                        <DropdownMenuContent align="end" className="bg-[#ffffff] border-[#cfe8d8]">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+                          <DropdownMenuSeparator className="bg-[#cfe8d8]" />
                           <DropdownMenuItem>Ver perfil</DropdownMenuItem>
                           <DropdownMenuItem>Editar</DropdownMenuItem>
                           <DropdownMenuItem>Historial</DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+                          <DropdownMenuSeparator className="bg-[#cfe8d8]" />
                           <DropdownMenuItem className="text-red-400">Eliminar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -198,7 +198,7 @@ export default async function ClientesPage() {
               ))}
               {clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                  <TableCell colSpan={6} className="text-center py-8 text-[#5f756b]">
                     No hay clientes registrados. ¡Agrega tu primer cliente!
                   </TableCell>
                 </TableRow>
@@ -207,22 +207,22 @@ export default async function ClientesPage() {
           </Table>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <div className="text-sm text-gray-400">Mostrando {clients.length} clientes</div>
+          <div className="text-sm text-[#5f756b]">Mostrando {clients.length} clientes</div>
           {clients.length > 10 && (
             <div className="flex gap-1">
-              <Button variant="outline" size="sm" className="border-[#2a3a4b]" disabled>
+              <Button variant="outline" size="sm" className="border-[#cfe8d8]" disabled>
                 Anterior
               </Button>
-              <Button variant="outline" size="sm" className="border-[#2a3a4b] bg-[#0a1525]">
+              <Button variant="outline" size="sm" className="border-[#cfe8d8] bg-[#f6fbf7]">
                 1
               </Button>
-              <Button variant="outline" size="sm" className="border-[#2a3a4b]">
+              <Button variant="outline" size="sm" className="border-[#cfe8d8]">
                 2
               </Button>
-              <Button variant="outline" size="sm" className="border-[#2a3a4b]">
+              <Button variant="outline" size="sm" className="border-[#cfe8d8]">
                 3
               </Button>
-              <Button variant="outline" size="sm" className="border-[#2a3a4b]">
+              <Button variant="outline" size="sm" className="border-[#cfe8d8]">
                 Siguiente
               </Button>
             </div>

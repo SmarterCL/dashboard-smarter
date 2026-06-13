@@ -50,9 +50,9 @@ export function UserProfile() {
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-[#1e2a3b] border-[#2a3a4b]" align="end">
+      <DropdownMenuContent className="w-56 bg-[#ffffff] border-[#cfe8d8]" align="end">
         <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+        <DropdownMenuSeparator className="bg-[#cfe8d8]" />
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <User className="mr-2 h-4 w-4" />
@@ -65,7 +65,7 @@ export function UserProfile() {
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator className="bg-[#2a3a4b]" />
+        <DropdownMenuSeparator className="bg-[#cfe8d8]" />
         <DropdownMenuItem onClick={handleSignOut} disabled={isLoading}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>{isLoading ? "Cerrando sesión..." : "Cerrar sesión"}</span>

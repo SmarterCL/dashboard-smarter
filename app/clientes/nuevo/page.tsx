@@ -107,10 +107,10 @@ export default function NuevoClientePage() {
         <h1 className="text-2xl font-bold">Nuevo Cliente</h1>
       </div>
 
-      <Card className="bg-[#1e2a3b] border-[#2a3a4b] max-w-2xl mx-auto">
+      <Card className="bg-[#ffffff] border-[#cfe8d8] max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-lg">Información del Cliente</CardTitle>
-          <CardDescription className="text-gray-400">Ingresa los datos del nuevo cliente</CardDescription>
+          <CardDescription className="text-[#5f756b]">Ingresa los datos del nuevo cliente</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -122,7 +122,7 @@ export default function NuevoClientePage() {
                 id="name"
                 name="name"
                 placeholder="Nombre del cliente"
-                className={`bg-[#0a1525] border-[#2a3a4b] ${errors.name ? "border-red-400" : ""}`}
+                className={`bg-[#f6fbf7] border-[#cfe8d8] ${errors.name ? "border-red-400" : ""}`}
                 value={formData.name}
                 onChange={handleChange}
                 aria-invalid={!!errors.name}
@@ -144,7 +144,7 @@ export default function NuevoClientePage() {
                 name="email"
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className={`bg-[#0a1525] border-[#2a3a4b] ${errors.email ? "border-red-400" : ""}`}
+                className={`bg-[#f6fbf7] border-[#cfe8d8] ${errors.email ? "border-red-400" : ""}`}
                 value={formData.email}
                 onChange={handleChange}
                 aria-invalid={!!errors.email}
@@ -163,7 +163,7 @@ export default function NuevoClientePage() {
                 id="phone"
                 name="phone"
                 placeholder="+56 9 1234 5678"
-                className="bg-[#0a1525] border-[#2a3a4b]"
+                className="bg-[#f6fbf7] border-[#cfe8d8]"
                 value={formData.phone}
                 onChange={handleChange}
               />
@@ -172,10 +172,10 @@ export default function NuevoClientePage() {
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
               <Select defaultValue="active" onValueChange={(value) => handleSelectChange("status", value)}>
-                <SelectTrigger id="status" className="bg-[#0a1525] border-[#2a3a4b]">
+                <SelectTrigger id="status" className="bg-[#f6fbf7] border-[#cfe8d8]">
                   <SelectValue placeholder="Selecciona un estado" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1e2a3b] border-[#2a3a4b]">
+                <SelectContent className="bg-[#ffffff] border-[#cfe8d8]">
                   <SelectItem value="active">Activo</SelectItem>
                   <SelectItem value="inactive">Inactivo</SelectItem>
                   <SelectItem value="pending">Pendiente</SelectItem>
@@ -184,7 +184,7 @@ export default function NuevoClientePage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline" className="border-[#2a3a4b]" type="button" asChild>
+            <Button variant="outline" className="border-[#cfe8d8]" type="button" asChild>
               <Link href="/clientes">Cancelar</Link>
             </Button>
             <Button type="submit" disabled={isLoading} className="gap-2">
