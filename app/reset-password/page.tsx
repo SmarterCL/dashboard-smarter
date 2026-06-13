@@ -1,18 +1,12 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("")
@@ -21,28 +15,33 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClientSupabaseClient()
+  const supabase = useMemo(() => createClientSupabaseClient(), [])
 
   useEffect(() => {
-    // Verificar si hay un hash en la URL (necesario para el flujo de restablecimiento de contraseña)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    if (!hashParams.get("access_token")) {
+    const params = new URLSearchParams(window.location.hash.substring(1))
+    const hasRecoveryToken = params.has("access_token") && params.get("type") === "recovery"
+
+    if (!hasRecoveryToken) {
       setError("Enlace de restablecimiento de contraseña inválido o expirado.")
     }
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setError(null)
     setSuccess(null)
-    setIsLoading(true)
 
-    // Validar que las contraseñas coincidan
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
-      setIsLoading(false)
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres")
       return
     }
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      return
+    }
+
+    setIsLoading(true)
 
     try {
       const { error } = await supabase.auth.updateUser({ password })
@@ -52,96 +51,95 @@ export default function ResetPasswordPage() {
         return
       }
 
-      setSuccess("Tu contraseña ha sido actualizada correctamente. Serás redirigido al inicio de sesión.")
-
-      // Redirigir al login después de 3 segundos
-      setTimeout(() => {
-        router.push("/login")
-      }, 3000)
-    } catch (err) {
+      setSuccess("Tu contraseña fue actualizada correctamente. Serás redirigido al inicio de sesión.")
+      setTimeout(() => router.push("/login"), 2500)
+    } catch {
       setError("Ocurrió un error inesperado. Por favor, intenta de nuevo.")
-      console.error("Password update error:", err)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-[#0a1525] p-4"
-      style={{ backgroundImage: "url('/images/app-login-bg.png')", backgroundSize: "cover" }}
-    >
-      <Card className="w-full max-w-md bg-[#1e2a3b] border-[#2a3a4b]">
-        <CardHeader className="space-y-2 items-center text-center">
-          <div className="w-20 h-20 mb-2">
-            <Image src="/images/logo.png" alt="SmarterOS Logo" width={80} height={80} priority />
+    <div className="auth-page">
+      <div className="auth-blob auth-blob-1" />
+      <div className="auth-blob auth-blob-2" />
+
+      <div className="auth-card">
+        <div className="auth-logo-wrap">
+          <Image src="/images/logo.png" alt="SmarterOS Logo" width={56} height={56} priority />
+        </div>
+
+        <h1 className="auth-title">Restablecer contraseña</h1>
+        <p className="auth-subtitle">Ingresa una nueva contraseña para tu cuenta</p>
+
+        {error && (
+          <div className="auth-alert auth-alert-error" role="alert">
+            {error}
           </div>
-          <CardTitle className="text-2xl">Restablecer Contraseña</CardTitle>
-          <CardDescription className="text-gray-400">Ingresa tu nueva contraseña</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert className="bg-red-500/20 text-red-400 border-red-500/50">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+        )}
+        {success && (
+          <div className="auth-alert auth-alert-success" role="alert">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          <div className="auth-field">
+            <label htmlFor="reset-password" className="auth-label">
+              Nueva contraseña
+            </label>
+            <input
+              id="reset-password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Mínimo 8 caracteres"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={8}
+              className="auth-input"
+              disabled={!!success}
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="reset-confirm-password" className="auth-label">
+              Confirmar nueva contraseña
+            </label>
+            <input
+              id="reset-confirm-password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+              minLength={8}
+              className="auth-input"
+              disabled={!!success}
+            />
+          </div>
+
+          <button type="submit" className="auth-btn-primary" disabled={isLoading || !!success}>
+            {isLoading ? (
+              <>
+                <Loader2 className="auth-spinner-sm" />
+                Actualizando...
+              </>
+            ) : (
+              "Actualizar Contraseña"
             )}
-
-            {success && (
-              <Alert className="bg-green-500/20 text-green-400 border-green-500/50">
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Nueva contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[#0a1525] border-[#2a3a4b]"
-                disabled={!!success}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar nueva contraseña</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="bg-[#0a1525] border-[#2a3a4b]"
-                disabled={!!success}
-              />
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading || !!success || !!error}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Actualizando...
-                </>
-              ) : (
-                "Actualizar Contraseña"
-              )}
-            </Button>
-
-            <div className="text-center text-sm text-gray-400">
-              <Link href="/login" className="text-blue-400 hover:underline">
-                Volver a Iniciar Sesión
-              </Link>
-            </div>
-          </CardFooter>
+          </button>
         </form>
-      </Card>
+
+        <p className="auth-footer-text">
+          <Link href="/login" className="auth-link auth-back-link">
+            <ArrowLeft size={14} />
+            Volver a Iniciar Sesión
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

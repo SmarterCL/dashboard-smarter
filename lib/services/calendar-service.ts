@@ -1,7 +1,9 @@
 import { createServerSupabaseClient } from "../supabase"
+import { isMissingTableError } from "./supabase-errors"
 
 export type CalendarEvent = {
   id: string
+  organization_id: string | null
   title: string
   description: string | null
   start_time: string
@@ -34,8 +36,12 @@ export async function getCalendarEvents(startDate: string, endDate: string): Pro
       .order("start_time", { ascending: true })
 
     if (error) {
+      if (isMissingTableError(error)) {
+        return []
+      }
+
       console.error("Error fetching calendar events:", error)
-      throw new Error(`Error fetching calendar events: ${error.message}`)
+      return []
     }
 
     return data || []
@@ -52,6 +58,10 @@ export async function getEventById(id: string): Promise<CalendarEvent | null> {
   const { data, error } = await supabase.from("calendar_events").select("*").eq("id", id).single()
 
   if (error) {
+    if (isMissingTableError(error)) {
+      return null
+    }
+
     console.error(`Error fetching event with id ${id}:`, error)
     return null
   }
@@ -115,6 +125,10 @@ export async function getEventParticipants(eventId: string): Promise<EventPartic
     .eq("event_id", eventId)
 
   if (error) {
+    if (isMissingTableError(error)) {
+      return []
+    }
+
     console.error(`Error fetching participants for event ${eventId}:`, error)
     throw error
   }

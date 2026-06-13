@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "../supabase"
 
 export type WhatsAppMessage = {
   id: string
+  organization_id: string | null
   client_id: string
   direction: "incoming" | "outgoing"
   content: string

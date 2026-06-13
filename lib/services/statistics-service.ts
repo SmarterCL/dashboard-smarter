@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "../supabase"
+import { isMissingTableError } from "./supabase-errors"
 
 export type Statistic = {
   id: string
@@ -24,6 +25,10 @@ export async function getStatistics(metricName: string, days = 7): Promise<Stati
     .order("date_recorded", { ascending: true })
 
   if (error) {
+    if (isMissingTableError(error)) {
+      return []
+    }
+
     console.error(`Error fetching statistics for ${metricName}:`, error)
     throw error
   }
@@ -53,6 +58,10 @@ export async function getDailyStatistics(): Promise<any> {
   const { data, error } = await supabase.from("statistics").select("*").eq("date_recorded", today)
 
   if (error) {
+    if (isMissingTableError(error)) {
+      return {}
+    }
+
     console.error("Error fetching daily statistics:", error)
     throw error
   }

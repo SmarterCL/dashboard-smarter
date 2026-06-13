@@ -1,7 +1,9 @@
 import { createServerSupabaseClient } from "../supabase"
+import { isMissingTableError } from "./supabase-errors"
 
 export type Client = {
   id: string
+  organization_id: string | null
   name: string
   email: string | null
   phone: string | null
@@ -18,8 +20,12 @@ export async function getClients(): Promise<Client[]> {
     const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false })
 
     if (error) {
+      if (isMissingTableError(error)) {
+        return []
+      }
+
       console.error("Error fetching clients:", error)
-      throw new Error(`Error fetching clients: ${error.message}`)
+      return []
     }
 
     return data || []
@@ -35,6 +41,10 @@ export async function getClientById(id: string): Promise<Client | null> {
   const { data, error } = await supabase.from("clients").select("*").eq("id", id).single()
 
   if (error) {
+    if (isMissingTableError(error)) {
+      return null
+    }
+
     console.error(`Error fetching client with id ${id}:`, error)
     return null
   }

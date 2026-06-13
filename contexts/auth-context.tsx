@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { Session, User } from "@supabase/supabase-js"
-import { createClientSupabaseClient } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { useRouter } from "next/navigation"
 
 type AuthContextType = {
@@ -13,6 +13,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<{ error: any; data: any }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: any }>
+  signInWithOAuth: (provider: "google" | "github") => Promise<{ error: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -101,6 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInWithOAuth = async (provider: "google" | "github") => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      return { error }
+    } catch (error) {
+      console.error(`Error signing in with ${provider}:`, error)
+      return { error }
+    }
+  }
+
   const value = {
     user,
     session,
@@ -109,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    signInWithOAuth,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
