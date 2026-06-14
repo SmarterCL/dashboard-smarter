@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getMessages, sendMessage } from "@/lib/services/chatwoot-service"
 import { apiErrorResponse, getSmarterOSSession } from "@/lib/api/smarteros-session"
+import { bootstrapWorkspace } from "@/lib/services/bootstrap-workspace"
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -20,7 +21,8 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    await getSmarterOSSession()
+    const { user } = await getSmarterOSSession()
+    const bootstrap = await bootstrapWorkspace(user)
     const { id } = await context.params
     const body = await request.json()
     const content = typeof body.content === "string" ? body.content.trim() : ""
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Mensaje vacío" }, { status: 400 })
     }
 
-    const message = await sendMessage(id, content)
+    const message = await sendMessage(id, bootstrap.contact.id, content)
     return NextResponse.json({ message })
   } catch (error) {
     return apiErrorResponse(error)

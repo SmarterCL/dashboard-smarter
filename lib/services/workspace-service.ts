@@ -10,6 +10,7 @@ export type Workspace = {
   updated_at: string
   chatwoot_contact_id: number | null
   chatwoot_conversation_id: number | null
+  chatwoot_source_id: string | null
   waha_session_id: string | null
   trial_started_at: string | null
   trial_expires_at: string | null
@@ -112,7 +113,9 @@ export async function getOrCreateWorkspace(user: User): Promise<Workspace> {
 
 export async function updateWorkspaceOperationalFields(
   workspaceId: string,
-  fields: Partial<Pick<Workspace, "chatwoot_contact_id" | "chatwoot_conversation_id" | "waha_session_id">>,
+  fields: Partial<
+    Pick<Workspace, "chatwoot_contact_id" | "chatwoot_conversation_id" | "chatwoot_source_id" | "waha_session_id">
+  >,
 ) {
   const supabase = createServerSupabaseClient()
   const { data, error } = await supabase.from("organizations").update(fields).eq("id", workspaceId).select("*").single()

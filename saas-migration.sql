@@ -42,6 +42,7 @@ ALTER TABLE public.subscription ADD COLUMN IF NOT EXISTS organization_id uuid RE
 -- Workspace runtime metadata (Chatwoot + WAHA + trial)
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS chatwoot_contact_id bigint;
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS chatwoot_conversation_id bigint;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS chatwoot_source_id text;
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS waha_session_id text UNIQUE;
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS trial_started_at timestamp with time zone;
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS trial_expires_at timestamp with time zone;

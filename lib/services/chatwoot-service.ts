@@ -1,11 +1,15 @@
 import type { User } from "@supabase/supabase-js"
-import {
-  type Workspace,
-  updateWorkspaceOperationalFields,
-} from "@/lib/services/workspace-service"
+import { type Workspace, updateWorkspaceOperationalFields } from "@/lib/services/workspace-service"
+
+export type ChatwootAccount = {
+  id: number
+  name?: string | null
+}
 
 export type ChatwootContact = {
   id: number
+  source_id?: string | null
+  pubsub_token?: string | null
   name?: string | null
   email?: string | null
   identifier?: string | null
@@ -36,7 +40,8 @@ export type ChatwootMessage = {
 }
 
 function chatwootConfig() {
-  const baseUrl = process.env.CHATWOOT_BASE_URL || process.env.NEXT_PUBLIC_CHATWOOT_BASE_URL || "https://app.chatwoot.com"
+  const baseUrl =
+    process.env.CHATWOOT_BASE_URL || process.env.NEXT_PUBLIC_CHATWOOT_BASE_URL || "https://app.chatwoot.com"
   const accountId = process.env.CHATWOOT_ACCOUNT_ID
   const inboxId = process.env.CHATWOOT_INBOX_ID
   const apiAccessToken = process.env.CHATWOOT_API_ACCESS_TOKEN
@@ -53,9 +58,28 @@ function chatwootConfig() {
   }
 }
 
-async function chatwootFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function chatwootPublicFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const config = chatwootConfig()
-  const response = await fetch(`${config.baseUrl}/api/v1/accounts/${config.accountId}${path}`, {
+  const response = await fetch(`${config.baseUrl}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Chatwoot API error ${response.status}: ${body}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
+async function chatwootRootFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const config = chatwootConfig()
+  const response = await fetch(`${config.baseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -73,6 +97,11 @@ async function chatwootFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>
 }
 
+async function chatwootAccountFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const config = chatwootConfig()
+  return chatwootRootFetch<T>(`/api/v1/accounts/${config.accountId}${path}`, init)
+}
+
 function contactIdentifier(userId: string) {
   return `smarteros:${userId}`
 }
@@ -82,51 +111,47 @@ function contactName(user: User) {
   return metadataName || user.email || `Usuario ${user.id.slice(0, 8)}`
 }
 
+export async function validateChatwootToken(): Promise<ChatwootAccount[]> {
+  return chatwootRootFetch<ChatwootAccount[]>("/api/v1/accounts")
+}
+
 export async function getOrCreateContact(user: User, workspace: Workspace): Promise<ChatwootContact> {
-  if (workspace.chatwoot_contact_id) {
+  if (workspace.chatwoot_contact_id && workspace.chatwoot_source_id) {
     return {
       id: workspace.chatwoot_contact_id,
+      source_id: workspace.chatwoot_source_id,
       name: contactName(user),
       email: user.email,
       identifier: contactIdentifier(user.id),
     }
   }
 
-  const identifier = contactIdentifier(user.id)
-  const search = await chatwootFetch<{ payload?: ChatwootContact[] }>(
-    `/contacts/search?q=${encodeURIComponent(identifier)}`,
-  )
-  const existing = search.payload?.find((contact) => contact.identifier === identifier)
-
-  if (existing?.id) {
-    await updateWorkspaceOperationalFields(workspace.id, { chatwoot_contact_id: existing.id })
-    return existing
-  }
-
   const config = chatwootConfig()
-  const created = await chatwootFetch<ChatwootContact>("/contacts", {
+  const phoneNumber = typeof user.user_metadata?.phone === "string" ? user.user_metadata.phone : undefined
+
+  const created = await chatwootPublicFetch<ChatwootContact>(`/public/api/v1/inboxes/${config.inboxId}/contacts`, {
     method: "POST",
     body: JSON.stringify({
-      inbox_id: config.inboxId,
+      identifier: contactIdentifier(user.id),
       name: contactName(user),
       email: user.email,
-      identifier,
-      additional_attributes: {
-        workspace_id: workspace.id,
-        supabase_user_id: user.id,
-      },
+      phone_number: phoneNumber,
     }),
   })
 
-  await updateWorkspaceOperationalFields(workspace.id, { chatwoot_contact_id: created.id })
+  await updateWorkspaceOperationalFields(workspace.id, {
+    chatwoot_contact_id: created.id,
+    chatwoot_source_id: created.source_id || null,
+  })
+
   return created
 }
 
 export async function getOrCreateConversation(
-  contactId: number,
+  contact: ChatwootContact,
   workspace: Workspace,
 ): Promise<ChatwootConversation> {
-  if (workspace.chatwoot_conversation_id) {
+  if (workspace.chatwoot_conversation_id && workspace.chatwoot_source_id) {
     return {
       id: workspace.chatwoot_conversation_id,
       account_id: Number(chatwootConfig().accountId),
@@ -135,37 +160,48 @@ export async function getOrCreateConversation(
     }
   }
 
+  if (!contact.source_id) {
+    throw new Error("Chatwoot contact missing source_id")
+  }
+
   const config = chatwootConfig()
-  const conversation = await chatwootFetch<ChatwootConversation>("/conversations", {
+  const conversation = await chatwootAccountFetch<ChatwootConversation>("/conversations", {
     method: "POST",
     body: JSON.stringify({
-      source_id: `smarteros-workspace-${workspace.id}`,
+      source_id: contact.source_id,
       inbox_id: config.inboxId,
-      contact_id: contactId,
+      contact_id: contact.id,
       status: "open",
-      custom_attributes: {
-        workspace_id: workspace.id,
-      },
     }),
   })
 
-  await updateWorkspaceOperationalFields(workspace.id, { chatwoot_conversation_id: conversation.id })
+  await updateWorkspaceOperationalFields(workspace.id, {
+    chatwoot_conversation_id: conversation.id,
+    chatwoot_source_id: contact.source_id,
+  })
+
   return conversation
 }
 
-export async function sendMessage(conversationId: number | string, message: string): Promise<ChatwootMessage> {
-  return chatwootFetch<ChatwootMessage>(`/conversations/${conversationId}/messages`, {
-    method: "POST",
-    body: JSON.stringify({
-      content: message,
-      message_type: "outgoing",
-      private: false,
-      content_type: "text",
-    }),
-  })
+export async function sendMessage(
+  conversationId: number | string,
+  contactId: number | string,
+  message: string,
+): Promise<ChatwootMessage> {
+  const config = chatwootConfig()
+  return chatwootPublicFetch<ChatwootMessage>(
+    `/public/api/v1/inboxes/${config.inboxId}/contacts/${contactId}/conversations/${conversationId}/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        content: message,
+        echo_id: `smarteros-${Date.now()}`,
+      }),
+    },
+  )
 }
 
 export async function getMessages(conversationId: number | string): Promise<ChatwootMessage[]> {
-  const response = await chatwootFetch<{ payload?: ChatwootMessage[] }>(`/conversations/${conversationId}/messages`)
+  const response = await chatwootAccountFetch<{ payload?: ChatwootMessage[] }>(`/conversations/${conversationId}/messages`)
   return response.payload || []
 }

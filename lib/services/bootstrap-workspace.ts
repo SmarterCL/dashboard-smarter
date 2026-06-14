@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js"
 import {
   getOrCreateContact,
   getOrCreateConversation,
+  validateChatwootToken,
   type ChatwootContact,
   type ChatwootConversation,
 } from "@/lib/services/chatwoot-service"
@@ -36,6 +37,8 @@ export async function bootstrapWorkspace(user: User): Promise<BootstrapWorkspace
     throw new Error("Trial expirado")
   }
 
+  await validateChatwootToken()
+
   const wasBootstrapped = Boolean(
     workspace.chatwoot_contact_id && workspace.chatwoot_conversation_id && workspace.waha_session_id,
   )
@@ -44,9 +47,10 @@ export async function bootstrapWorkspace(user: User): Promise<BootstrapWorkspace
   const workspaceWithContact = {
     ...workspace,
     chatwoot_contact_id: contact.id,
+    chatwoot_source_id: contact.source_id || workspace.chatwoot_source_id,
   }
 
-  const conversation = await getOrCreateConversation(contact.id, workspaceWithContact)
+  const conversation = await getOrCreateConversation(contact, workspaceWithContact)
   const workspaceWithConversation = {
     ...workspaceWithContact,
     chatwoot_conversation_id: conversation.id,
