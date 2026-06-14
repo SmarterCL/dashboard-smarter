@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+const TRIAL_DAYS = 7
+
+function isTrialExpired(createdAt: string) {
+  const trialExpiresAt = new Date(createdAt)
+  trialExpiresAt.setUTCDate(trialExpiresAt.getUTCDate() + TRIAL_DAYS)
+  return trialExpiresAt.getTime() <= Date.now()
+}
+
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -44,6 +52,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = ["/login", "/register", "/reset-password", "/forgot-password", "/auth/callback"]
   const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   const isAuthCallback = request.nextUrl.pathname.startsWith("/auth/callback")
+  const isUpgradeRoute = request.nextUrl.pathname.startsWith("/upgrade")
 
   // Si el usuario no está autenticado y la ruta no es pública, redirigir a login
   if (!user && !isPublicRoute) {
@@ -55,6 +64,10 @@ export async function middleware(request: NextRequest) {
   // Si el usuario está autenticado y está intentando acceder a una ruta pública, redirigir al dashboard
   if (user && isPublicRoute && !isAuthCallback) {
     return NextResponse.redirect(new URL("/", request.url))
+  }
+
+  if (user && !isUpgradeRoute && isTrialExpired(user.created_at)) {
+    return NextResponse.redirect(new URL("/upgrade", request.url))
   }
 
   return supabaseResponse

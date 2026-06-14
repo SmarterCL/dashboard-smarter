@@ -39,6 +39,15 @@ ALTER TABLE public.customer     ADD COLUMN IF NOT EXISTS organization_id uuid RE
 ALTER TABLE public.deal         ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE public.subscription ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE;
 
+-- Workspace runtime metadata (Chatwoot + WAHA + trial)
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS chatwoot_contact_id bigint;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS chatwoot_conversation_id bigint;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS waha_session_id text UNIQUE;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS trial_started_at timestamp with time zone;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS trial_expires_at timestamp with time zone;
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS plan_status text NOT NULL DEFAULT 'trial'
+  CHECK (plan_status IN ('trial', 'active', 'past_due', 'canceled'));
+
 -- Tablas ya mencionadas en código (clients, calendar_events, whatsapp_messages)
 -- Añadir solo si existen, ignorar error si no:
 ALTER TABLE IF EXISTS public.clients           ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE;
@@ -61,3 +70,11 @@ BEGIN
     UPDATE public.deal         SET organization_id = default_org_id WHERE organization_id IS NULL;
     UPDATE public.subscription SET organization_id = default_org_id WHERE organization_id IS NULL;
 END $$;
+
+-- Backfill trial windows for existing organizations.
+UPDATE public.organizations
+SET
+  trial_started_at = COALESCE(trial_started_at, created_at),
+  trial_expires_at = COALESCE(trial_expires_at, created_at + interval '7 days')
+WHERE trial_started_at IS NULL
+   OR trial_expires_at IS NULL;

@@ -1,381 +1,323 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import {
-  Send,
-  Paperclip,
-  Mic,
-  MoreVertical,
-  Search,
-  Phone,
-  Video,
-  Smile,
-  Check,
-  CheckCheck,
-  Users,
-  Plus,
-  MessageSquare,
-} from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { AlertCircle, Check, CheckCheck, Loader2, MessageSquare, RefreshCw, Send } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
-// Datos de ejemplo para chats
-const chats = [
-  {
-    id: 1,
-    nombre: "Carlos Rodríguez",
-    ultimoMensaje: "Hola, ¿podemos agendar una reunión para mañana?",
-    hora: "10:30",
-    noLeidos: 2,
-    online: true,
-    avatar: null,
-  },
-  {
-    id: 2,
-    nombre: "María González",
-    ultimoMensaje: "Gracias por la información. Revisaré la propuesta.",
-    hora: "09:15",
-    noLeidos: 0,
-    online: false,
-    avatar: null,
-  },
-  {
-    id: 3,
-    nombre: "Juan Pérez",
-    ultimoMensaje: "Necesito información sobre los precios del servicio",
-    hora: "Ayer",
-    noLeidos: 0,
-    online: true,
-    avatar: null,
-  },
-  {
-    id: 4,
-    nombre: "Ana Silva",
-    ultimoMensaje: "El proyecto está avanzando según lo planeado",
-    hora: "Ayer",
-    noLeidos: 0,
-    online: false,
-    avatar: null,
-  },
-  {
-    id: 5,
-    nombre: "Roberto Muñoz",
-    ultimoMensaje: "¿Podemos coordinar una llamada para discutir los detalles?",
-    hora: "Lun",
-    noLeidos: 0,
-    online: false,
-    avatar: null,
-  },
-]
+type ChatwootConversation = {
+  id: number
+  status?: string
+  unread_count?: number
+  meta?: {
+    sender?: {
+      name?: string | null
+      email?: string | null
+    }
+  }
+}
 
-// Datos de ejemplo para mensajes
-const mensajes = [
-  {
-    id: 1,
-    remitente: "cliente",
-    texto: "Hola, ¿cómo estás?",
-    hora: "10:15",
-    leido: true,
-  },
-  {
-    id: 2,
-    remitente: "yo",
-    texto: "Hola Carlos, todo bien. ¿En qué puedo ayudarte?",
-    hora: "10:18",
-    leido: true,
-  },
-  {
-    id: 3,
-    remitente: "cliente",
-    texto: "Quería consultar sobre la disponibilidad para una reunión mañana",
-    hora: "10:20",
-    leido: true,
-  },
-  {
-    id: 4,
-    remitente: "yo",
-    texto: "Claro, tengo disponibilidad en la mañana. ¿Te parece bien a las 10:00?",
-    hora: "10:22",
-    leido: true,
-  },
-  {
-    id: 5,
-    remitente: "cliente",
-    texto: "Perfecto, a las 10:00 entonces. ¿Podemos hacerla por videollamada?",
-    hora: "10:25",
-    leido: true,
-  },
-  {
-    id: 6,
-    remitente: "yo",
-    texto: "Sin problema, te enviaré el enlace de la reunión por este mismo chat unos minutos antes.",
-    hora: "10:28",
-    leido: true,
-  },
-  {
-    id: 7,
-    remitente: "cliente",
-    texto: "Hola, ¿podemos agendar una reunión para mañana?",
-    hora: "10:30",
-    leido: false,
-  },
-]
+type ChatwootMessage = {
+  id: number
+  content: string
+  conversation_id: number
+  message_type: number
+  private: boolean
+  status: string | null
+  created_at: number
+  sender_type?: string | null
+}
+
+type TrialState = {
+  isExpired: boolean
+  daysRemaining: number
+  trialExpiresAt: string
+}
+
+const POLL_INTERVAL_MS = 5_000
+
+function formatMessageTime(timestamp: number) {
+  return new Intl.DateTimeFormat("es-CL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(timestamp * 1000))
+}
+
+function isOutgoing(message: ChatwootMessage) {
+  return message.message_type === 1 || message.sender_type === "User" || message.sender_type === "AgentBot"
+}
 
 export default function ChatPage() {
-  const [mensaje, setMensaje] = useState("")
-  const [chatActivo, setChatActivo] = useState(1)
-  const mensajesFinRef = useRef(null)
+  const [conversations, setConversations] = useState<ChatwootConversation[]>([])
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null)
+  const [messages, setMessages] = useState<ChatwootMessage[]>([])
+  const [trial, setTrial] = useState<TrialState | null>(null)
+  const [draft, setDraft] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  // Scroll al final de los mensajes cuando se carga la página o se envía un mensaje
-  useEffect(() => {
-    if (mensajesFinRef.current) {
-      mensajesFinRef.current.scrollIntoView({ behavior: "smooth" })
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
+    [activeConversationId, conversations],
+  )
+
+  const loadConversations = useCallback(async () => {
+    const response = await fetch("/api/chatwoot/conversations", { cache: "no-store" })
+    const payload = await response.json()
+
+    if (!response.ok) {
+      throw new Error(payload.error || "No se pudo cargar Chatwoot")
     }
-  }, [mensajes])
 
-  const handleEnviarMensaje = () => {
-    if (mensaje.trim() === "") return
+    setConversations(payload.conversations || [])
+    setTrial(payload.trial || null)
+    setActiveConversationId(payload.activeConversation?.id || payload.conversations?.[0]?.id || null)
+  }, [])
 
-    // Aquí se enviaría el mensaje a través de una API
-    console.log("Mensaje enviado:", mensaje)
+  const loadMessages = useCallback(async (conversationId: number) => {
+    const response = await fetch(`/api/chatwoot/conversations/${conversationId}/messages`, { cache: "no-store" })
+    const payload = await response.json()
 
-    // Limpiar el campo de mensaje
-    setMensaje("")
+    if (!response.ok) {
+      throw new Error(payload.error || "No se pudieron cargar los mensajes")
+    }
+
+    setMessages(payload.messages || [])
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function boot() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        await fetch("/api/chatwoot/contact", { cache: "no-store" })
+        await loadConversations()
+      } catch (bootError) {
+        if (!cancelled) {
+          setError(bootError instanceof Error ? bootError.message : "Error al iniciar el chat")
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    boot()
+    return () => {
+      cancelled = true
+    }
+  }, [loadConversations])
+
+  useEffect(() => {
+    if (!activeConversationId) return
+
+    let cancelled = false
+    const conversationId = activeConversationId
+
+    async function refreshMessages() {
+      try {
+        await loadMessages(conversationId)
+      } catch (refreshError) {
+        if (!cancelled) {
+          setError(refreshError instanceof Error ? refreshError.message : "Error al refrescar mensajes")
+        }
+      }
+    }
+
+    refreshMessages()
+    const interval = window.setInterval(refreshMessages, POLL_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [activeConversationId, loadMessages])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  async function handleSendMessage() {
+    if (!activeConversationId || !draft.trim() || isSending || trial?.isExpired) return
+
+    const content = draft.trim()
+    setDraft("")
+    setIsSending(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/chatwoot/conversations/${activeConversationId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo enviar el mensaje")
+      }
+
+      await loadMessages(activeConversationId)
+    } catch (sendError) {
+      setDraft(content)
+      setError(sendError instanceof Error ? sendError.message : "Error al enviar el mensaje")
+    } finally {
+      setIsSending(false)
+    }
   }
 
-  const chatActual = chats.find((chat) => chat.id === chatActivo)
-
   return (
-    <div className="flex-1 flex h-[calc(100vh-4rem)]">
-      {/* Panel de chats */}
-      <div className="w-80 border-r border-[#ffffff] flex flex-col bg-[#f6fbf7]">
-        <div className="p-4 border-b border-[#ffffff]">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#5f756b]" />
-            <Input type="search" placeholder="Buscar chat..." className="pl-8 bg-[#ffffff] border-[#cfe8d8]" />
+    <div className="flex h-[calc(100vh-4rem)] flex-1 bg-[#f6fbf7] text-[#123326]">
+      <aside className="flex w-80 flex-col border-r border-[#cfe8d8] bg-white">
+        <div className="border-b border-[#cfe8d8] p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-semibold">Chat SmarterOS</h1>
+              <p className="text-xs text-[#5f756b]">Chatwoot Application API</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={loadConversations} disabled={isLoading}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
+          {trial && (
+            <Badge className="mt-3 bg-green-600">
+              {trial.isExpired ? "Trial expirado" : `${trial.daysRemaining} días de trial`}
+            </Badge>
+          )}
         </div>
 
-        <Tabs defaultValue="todos" className="flex-1 flex flex-col">
-          <div className="px-2 pt-2">
-            <TabsList className="bg-[#ffffff] w-full">
-              <TabsTrigger value="todos" className="flex-1">
-                Todos
-              </TabsTrigger>
-              <TabsTrigger value="noLeidos" className="flex-1">
-                No leídos
-              </TabsTrigger>
-              <TabsTrigger value="grupos" className="flex-1">
-                Grupos
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="todos" className="flex-1 overflow-y-auto p-2 space-y-1 m-0">
-            {chats.map((chat) => (
-              <div
-                key={chat.id}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#ffffff] ${chatActivo === chat.id ? "bg-[#ffffff]" : ""}`}
-                onClick={() => setChatActivo(chat.id)}
-              >
-                <div className="relative">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={chat.avatar || `/placeholder.svg?height=40&width=40&text=${chat.nombre.charAt(0)}`}
-                      alt={chat.nombre}
-                    />
-                    <AvatarFallback>{chat.nombre.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  {chat.online && (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-[#f6fbf7]"></span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium truncate">{chat.nombre}</h3>
-                    <span className="text-xs text-[#5f756b]">{chat.hora}</span>
-                  </div>
-                  <p className="text-sm text-[#5f756b] truncate">{chat.ultimoMensaje}</p>
-                </div>
-                {chat.noLeidos > 0 && <Badge className="bg-green-500 text-white">{chat.noLeidos}</Badge>}
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="noLeidos" className="flex-1 overflow-y-auto p-2 space-y-1 m-0">
-            {chats
-              .filter((chat) => chat.noLeidos > 0)
-              .map((chat) => (
-                <div
-                  key={chat.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#ffffff] ${chatActivo === chat.id ? "bg-[#ffffff]" : ""}`}
-                  onClick={() => setChatActivo(chat.id)}
+        <div className="flex-1 overflow-y-auto p-2">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-[#5f756b]">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Cargando conversaciones
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center px-4 text-center text-sm text-[#5f756b]">
+              <MessageSquare className="mb-3 h-8 w-8" />
+              No hay conversaciones activas.
+            </div>
+          ) : (
+            conversations.map((conversation) => {
+              const sender = conversation.meta?.sender
+              const title = sender?.name || sender?.email || "Workspace SmarterOS"
+              return (
+                <button
+                  key={conversation.id}
+                  type="button"
+                  onClick={() => setActiveConversationId(conversation.id)}
+                  className={`flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-[#f6fbf7] ${
+                    activeConversationId === conversation.id ? "bg-[#f6fbf7]" : ""
+                  }`}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={chat.avatar || `/placeholder.svg?height=40&width=40&text=${chat.nombre.charAt(0)}`}
-                      alt={chat.nombre}
-                    />
-                    <AvatarFallback>{chat.nombre.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{title.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium truncate">{chat.nombre}</h3>
-                      <span className="text-xs text-[#5f756b]">{chat.hora}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h2 className="truncate text-sm font-medium">{title}</h2>
+                      <span className="text-xs text-[#5f756b]">#{conversation.id}</span>
                     </div>
-                    <p className="text-sm text-[#5f756b] truncate">{chat.ultimoMensaje}</p>
+                    <p className="truncate text-xs text-[#5f756b]">Estado: {conversation.status || "open"}</p>
                   </div>
-                  <Badge className="bg-green-500 text-white">{chat.noLeidos}</Badge>
-                </div>
-              ))}
-          </TabsContent>
+                  {!!conversation.unread_count && conversation.unread_count > 0 && (
+                    <Badge className="bg-green-600 text-white">{conversation.unread_count}</Badge>
+                  )}
+                </button>
+              )
+            })
+          )}
+        </div>
+      </aside>
 
-          <TabsContent value="grupos" className="flex-1 overflow-y-auto p-2 m-0">
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <div className="h-16 w-16 rounded-full bg-[#ffffff] flex items-center justify-center mb-4">
-                <Users className="h-8 w-8 text-[#5f756b]" />
-              </div>
-              <h3 className="font-medium">No hay grupos</h3>
-              <p className="text-sm text-[#5f756b] mt-1">Crea un grupo para chatear con varias personas a la vez</p>
-              <Button className="mt-4 gap-2">
-                <Plus className="h-4 w-4" />
-                Crear grupo
-              </Button>
+      <main className="flex flex-1 flex-col">
+        <header className="flex h-16 items-center justify-between border-b border-[#cfe8d8] bg-white px-5">
+          <div>
+            <h2 className="font-semibold">
+              {activeConversation ? `Conversación #${activeConversation.id}` : "Sin conversación activa"}
+            </h2>
+            <p className="text-xs text-[#5f756b]">Los mensajes se refrescan cada 5 segundos.</p>
+          </div>
+          {error && (
+            <div className="flex max-w-md items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span className="truncate">{error}</span>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          )}
+        </header>
 
-      {/* Panel de chat activo */}
-      <div className="flex-1 flex flex-col bg-[#f6fbf7]">
-        {chatActual ? (
+        {trial?.isExpired ? (
+          <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+            <AlertCircle className="mb-3 h-10 w-10 text-red-600" />
+            <h2 className="text-xl font-semibold">Trial expirado</h2>
+            <p className="mt-2 max-w-md text-[#5f756b]">
+              El chat y WAHA quedan bloqueados hasta activar un plan del workspace.
+            </p>
+          </div>
+        ) : (
           <>
-            {/* Cabecera del chat */}
-            <div className="flex items-center justify-between p-4 border-b border-[#ffffff]">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={chatActual.avatar || `/placeholder.svg?height=40&width=40&text=${chatActual.nombre.charAt(0)}`}
-                    alt={chatActual.nombre}
-                  />
-                  <AvatarFallback>{chatActual.nombre.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-medium">{chatActual.nombre}</h2>
-                  <p className="text-xs text-[#5f756b]">
-                    {chatActual.online ? "En línea" : "Último acceso hace 2 horas"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Phone className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Video className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Search className="h-5 w-5" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-[#ffffff] border-[#cfe8d8]">
-                    <DropdownMenuLabel>Opciones</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-[#cfe8d8]" />
-                    <DropdownMenuItem>Ver información de contacto</DropdownMenuItem>
-                    <DropdownMenuItem>Silenciar notificaciones</DropdownMenuItem>
-                    <DropdownMenuItem>Buscar en la conversación</DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-[#cfe8d8]" />
-                    <DropdownMenuItem className="text-red-400">Eliminar chat</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* Mensajes */}
-            <div
-              className="flex-1 overflow-y-auto p-4 space-y-4"
-              style={{ backgroundImage: "linear-gradient(to bottom, rgba(10, 21, 37, 0.9), rgba(10, 21, 37, 0.9))" }}
-            >
-              {mensajes.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.remitente === "yo" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      msg.remitente === "yo" ? "bg-green-600 text-white rounded-br-none" : "bg-[#ffffff] rounded-bl-none"
-                    }`}
-                  >
-                    <p>{msg.texto}</p>
+            <div className="flex-1 space-y-4 overflow-y-auto bg-[#0a1525] p-4">
+              {messages.map((message) => {
+                const outgoing = isOutgoing(message)
+                return (
+                  <div key={message.id} className={`flex ${outgoing ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-                        msg.remitente === "yo" ? "text-green-100" : "text-[#5f756b]"
+                      className={`max-w-[70%] rounded-lg p-3 ${
+                        outgoing ? "rounded-br-none bg-green-600 text-white" : "rounded-bl-none bg-white text-[#123326]"
                       }`}
                     >
-                      <span>{msg.hora}</span>
-                      {msg.remitente === "yo" &&
-                        (msg.leido ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />)}
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                      <div
+                        className={`mt-1 flex items-center justify-end gap-1 text-xs ${
+                          outgoing ? "text-green-100" : "text-[#5f756b]"
+                        }`}
+                      >
+                        <span>{formatMessageTime(message.created_at)}</span>
+                        {outgoing &&
+                          (message.status === "read" ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div ref={mensajesFinRef} />
+                )
+              })}
+              <div ref={messagesEndRef} />
             </div>
 
-            {/* Entrada de mensaje */}
-            <div className="p-4 border-t border-[#ffffff]">
+            <div className="border-t border-[#cfe8d8] bg-white p-4">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Smile className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Paperclip className="h-5 w-5" />
-                </Button>
                 <Input
                   placeholder="Escribe un mensaje..."
-                  value={mensaje}
-                  onChange={(e) => setMensaje(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleEnviarMensaje()}
-                  className="flex-1 bg-[#ffffff] border-[#cfe8d8]"
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  disabled={!activeConversationId || isSending}
+                  className="flex-1 border-[#cfe8d8] bg-white"
                 />
-                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleEnviarMensaje}>
-                  <Send className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                  <Mic className="h-5 w-5" />
+                <Button
+                  size="icon"
+                  onClick={handleSendMessage}
+                  disabled={!activeConversationId || !draft.trim() || isSending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                 </Button>
               </div>
             </div>
           </>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <div className="h-20 w-20 rounded-full bg-[#ffffff] flex items-center justify-center mb-4">
-              <MessageSquare className="h-10 w-10 text-[#5f756b]" />
-            </div>
-            <h2 className="text-xl font-medium">Selecciona un chat</h2>
-            <p className="text-[#5f756b] mt-2 max-w-md">
-              Elige una conversación de la lista o inicia una nueva para comenzar a chatear
-            </p>
-            <Button className="mt-6 gap-2">
-              <Plus className="h-4 w-4" />
-              Nuevo chat
-            </Button>
-          </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
