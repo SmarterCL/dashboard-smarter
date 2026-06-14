@@ -36,7 +36,7 @@ export type ChatwootMessage = {
 }
 
 function chatwootConfig() {
-  const baseUrl = process.env.CHATWOOT_BASE_URL || "https://app.chatwoot.com"
+  const baseUrl = process.env.CHATWOOT_BASE_URL || process.env.NEXT_PUBLIC_CHATWOOT_BASE_URL || "https://app.chatwoot.com"
   const accountId = process.env.CHATWOOT_ACCOUNT_ID
   const inboxId = process.env.CHATWOOT_INBOX_ID
   const apiAccessToken = process.env.CHATWOOT_API_ACCESS_TOKEN

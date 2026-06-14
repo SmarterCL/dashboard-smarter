@@ -2,15 +2,26 @@ import { type Workspace, updateWorkspaceOperationalFields } from "@/lib/services
 
 export type WahaSessionStatus = {
   sessionId: string
-  status: "missing_config" | "reserved" | "starting" | "working" | "failed" | "unknown"
+  status:
+    | "missing_config"
+    | "reserved"
+    | "starting"
+    | "working"
+    | "failed"
+    | "unknown"
+    | "WORKING"
+    | "SCAN_QR"
+    | "STOPPED"
+    | "STARTING"
   qr?: string | null
 }
 
 function wahaConfig() {
+  const configuredPrefix = process.env.WAHA_SESSION_PREFIX
   return {
     baseUrl: process.env.WAHA_BASE_URL?.replace(/\/$/, "") || null,
     apiKey: process.env.WAHA_API_KEY || null,
-    sessionPrefix: process.env.WAHA_SESSION_PREFIX || "smarteros",
+    sessionPrefix: configuredPrefix === undefined ? "smarteros" : configuredPrefix,
   }
 }
 
@@ -24,6 +35,10 @@ function wahaHeaders() {
 
 function buildSessionId(workspaceId: string) {
   const { sessionPrefix } = wahaConfig()
+  if (sessionPrefix === "") {
+    return "default"
+  }
+
   return `${sessionPrefix}-${workspaceId}`
 }
 
