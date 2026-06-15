@@ -122,6 +122,9 @@ export async function seedDatabase() {
       created_by: "admin",
     })
 
+    const seededClients = [client1, client2, client3, client4, client5]
+    const seededEvents = [event1, event2, event3]
+
     // Crear estadísticas de ejemplo
     const today = new Date().toISOString().split("T")[0]
 
@@ -174,7 +177,10 @@ export async function seedDatabase() {
       })
     }
 
-    return { success: true, message: "Datos de ejemplo creados correctamente" }
+    return {
+      success: true,
+      message: `Datos de ejemplo creados correctamente (${seededClients.length} clientes, ${seededEvents.length} eventos)`,
+    }
   } catch (error) {
     console.error("Error al crear datos de ejemplo:", error)
     return { success: false, message: "Error al crear datos de ejemplo", error }

@@ -1,405 +1,332 @@
 import Image from "next/image"
 import Link from "next/link"
 import {
+  Activity,
+  ArrowRight,
+  BarChart3,
   Bell,
+  Calendar,
+  CheckCircle2,
+  Clock3,
+  Database,
+  ExternalLink,
+  Filter,
+  Home,
   MessageSquare,
+  MoreHorizontal,
   Plus,
   Search,
-  BarChart3,
-  Users,
-  Calendar,
   Settings,
-  Home,
-  ArrowRight,
-  Database,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+  Workflow,
+  Zap,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
+  SidebarMenuItem,
+  SidebarProvider,
 } from "@/components/ui/sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { UserProfile } from "@/components/user-profile"
+
+const metrics = [
+  { label: "Recursos activos", value: "5", detail: "Clientes, chats, calendario, WAHA y planes", icon: Database },
+  { label: "Acciones custom", value: "18", detail: "Automatizaciones listas para ejecutar", icon: Workflow },
+  { label: "Tareas pendientes", value: "7", detail: "3 requieren revisión humana", icon: Clock3 },
+  { label: "Salud operativa", value: "98%", detail: "Servicios conectados y respondiendo", icon: Activity },
+]
+
+const resources = [
+  {
+    name: "Clientes",
+    description: "Contactos, oportunidades y estado comercial",
+    records: 128,
+    status: "Listo",
+    href: "/clientes",
+    owner: "CRM",
+  },
+  {
+    name: "Conversaciones",
+    description: "Bandeja omnicanal conectada con Chatwoot",
+    records: 342,
+    status: "Sincronizando",
+    href: "/chat",
+    owner: "Soporte",
+  },
+  {
+    name: "Calendario",
+    description: "Reuniones, reservas y próximos seguimientos",
+    records: 24,
+    status: "Listo",
+    href: "/calendario",
+    owner: "Agenda",
+  },
+  {
+    name: "WhatsApp WAHA",
+    description: "Sesión, QR y estado de conexión",
+    records: 1,
+    status: "Atención",
+    href: "/dashboard/connect-whatsapp",
+    owner: "Canales",
+  },
+]
+
+const automations = [
+  { title: "Responder mensajes sin asignar", state: "Recomendado", icon: MessageSquare, href: "/chat" },
+  { title: "Crear cliente desde conversación", state: "Acción", icon: Plus, href: "/clientes/nuevo" },
+  { title: "Agendar seguimiento comercial", state: "Acción", icon: Calendar, href: "/calendario/nuevo" },
+  { title: "Revisar métricas de conversión", state: "Reporte", icon: BarChart3, href: "/estadisticas" },
+]
+
+const auditTrail = [
+  { event: "WAHA session", description: "Canal validado y listo para enviar mensajes", time: "hace 4 min" },
+  { event: "Cliente actualizado", description: "Nueva etiqueta: seguimiento prioritario", time: "hace 18 min" },
+  { event: "Regla de agenda", description: "Reuniones bloqueadas fuera del horario comercial", time: "hace 1 h" },
+]
+
+function statusClass(status: string) {
+  if (status === "Listo") return "bg-green-100 text-green-800 hover:bg-green-100"
+  if (status === "Sincronizando") return "bg-amber-100 text-amber-800 hover:bg-amber-100"
+  return "bg-red-100 text-red-800 hover:bg-red-100"
+}
 
 export default function Dashboard() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-[#f6fbf7] text-[#123326]">
         <Sidebar className="border-r border-[#cfe8d8]">
-          <SidebarHeader className="flex items-center justify-center p-4">
-            <div className="flex flex-col items-center">
-              <Image src="/images/logo.png" alt="SmarterOS Logo" width={80} height={80} className="mb-2" priority />
-              <h1 className="text-xl font-bold">SmarterOS</h1>
+          <SidebarHeader className="p-4">
+            <div className="flex items-center gap-3">
+              <Image src="/images/logo.png" alt="SmarterOS Logo" width={44} height={44} className="rounded-lg" priority />
+              <div>
+                <h1 className="text-base font-bold leading-none">SmarterOS</h1>
+                <p className="mt-1 text-xs text-[#5f756b]">Admin Console</p>
+              </div>
             </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Dashboard" asChild isActive>
-                  <Link href="/">
-                    <Home className="h-5 w-5" />
-                    <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Estadísticas" asChild>
-                  <Link href="/estadisticas">
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Estadísticas</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Clientes" asChild>
-                  <Link href="/clientes">
-                    <Users className="h-5 w-5" />
-                    <span>Clientes</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Calendario" asChild>
-                  <Link href="/calendario">
-                    <Calendar className="h-5 w-5" />
-                    <span>Calendario</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configuración" asChild>
-                  <Link href="/configuracion">
-                    <Settings className="h-5 w-5" />
-                    <span>Configuración</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {[
+                { href: "/", label: "Dashboard", icon: Home, active: true },
+                { href: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
+                { href: "/clientes", label: "Clientes", icon: Users },
+                { href: "/calendario", label: "Calendario", icon: Calendar },
+                { href: "/configuracion", label: "Configuración", icon: Settings },
+              ].map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton tooltip={item.label} asChild isActive={item.active}>
+                    <Link href={item.href}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-4">
-            <Button variant="outline" className="w-full flex items-center justify-center gap-2" asChild>
+            <Button variant="outline" className="w-full justify-start gap-2 border-[#cfe8d8]" asChild>
               <Link href="/chat">
                 <MessageSquare className="h-4 w-4" />
-                <span>Iniciar chat</span>
+                Iniciar chat
               </Link>
             </Button>
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-10 border-b border-[#cfe8d8] bg-[#f6fbf7]/95 backdrop-blur">
-            <div className="flex h-16 items-center justify-between px-6 py-4">
-              <h1 className="text-xl font-bold">Dashboard</h1>
-              <div className="flex items-center gap-4">
-                <div className="relative hidden md:block">
+            <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5f756b]">Operaciones</p>
+                <h2 className="text-xl font-bold">Dashboard administrativo</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative hidden lg:block">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#5f756b]" />
                   <Input
                     type="search"
-                    placeholder="Buscar..."
-                    className="w-64 rounded-full bg-[#ffffff] border-[#cfe8d8] pl-8 md:w-80 text-[#123326]"
+                    placeholder="Buscar recurso, cliente o acción..."
+                    className="w-80 border-[#cfe8d8] bg-white pl-8"
                   />
                 </div>
-                <Button variant="outline" size="icon" className="relative border-[#cfe8d8] bg-[#ffffff]">
+                <Button variant="outline" size="icon" className="relative border-[#cfe8d8] bg-white">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] text-white">
-                    3
-                  </span>
+                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-green-500" />
                 </Button>
                 <UserProfile />
               </div>
             </div>
           </header>
 
-          <main className="flex-1 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tarjeta de bienvenida */}
-              <Card className="col-span-1 md:col-span-2 bg-gradient-to-br from-[#16a34a] to-[#f2fbf5] border-0 text-white">
+          <main className="flex-1 space-y-6 p-4 md:p-6">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {metrics.map((metric) => (
+                <Card key={metric.label} className="border-[#cfe8d8] bg-white">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-[#41564a]">{metric.label}</CardTitle>
+                    <metric.icon className="h-4 w-4 text-green-700" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{metric.value}</div>
+                    <p className="mt-1 text-xs text-[#5f756b]">{metric.detail}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </section>
+
+            <section className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
+              <Card className="border-[#cfe8d8] bg-white">
+                <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <CardTitle>Recursos administrables</CardTitle>
+                    <CardDescription className="text-[#5f756b]">
+                      Vista tipo AdminJS para navegar datos, acciones y estado operativo.
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 border-[#cfe8d8]">
+                      <Filter className="h-4 w-4" />
+                      Filtros
+                    </Button>
+                    <Button size="sm" className="gap-2 bg-green-700 hover:bg-green-800" asChild>
+                      <Link href="/clientes/nuevo">
+                        <Plus className="h-4 w-4" />
+                        Nuevo
+                      </Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Recurso</TableHead>
+                        <TableHead className="hidden md:table-cell">Owner</TableHead>
+                        <TableHead>Registros</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="w-12" />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {resources.map((resource) => (
+                        <TableRow key={resource.name}>
+                          <TableCell>
+                            <div className="font-medium">{resource.name}</div>
+                            <div className="text-xs text-[#5f756b]">{resource.description}</div>
+                          </TableCell>
+                          <TableCell className="hidden text-[#5f756b] md:table-cell">{resource.owner}</TableCell>
+                          <TableCell>{resource.records}</TableCell>
+                          <TableCell>
+                            <Badge className={statusClass(resource.status)}>{resource.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link href={resource.href} aria-label={`Abrir ${resource.name}`}>
+                                <ExternalLink className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              <Card className="border-[#cfe8d8] bg-[#123326] text-white">
                 <CardHeader>
-                  <CardTitle className="text-2xl">¡Bienvenido a SmarterOS Hub!</CardTitle>
-                  <CardDescription className="text-green-50">
-                    Tu asistente inteligente está listo para ayudarte
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Centro de acciones</CardTitle>
+                    <SlidersHorizontal className="h-5 w-5 text-green-200" />
+                  </div>
+                  <CardDescription className="text-green-100">
+                    Acciones de negocio listas para ejecutar sobre los recursos.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col md:flex-row gap-4">
-                  <Image
-                    src="/images/logo.png"
-                    alt="SmarterOS Logo"
-                    width={120}
-                    height={120}
-                    className="mx-auto md:mx-0"
-                    priority
-                  />
-                  <div className="space-y-4">
-                    <p className="text-green-50">
-                      SmarterBOT ya puede ayudarte con tus tareas diarias, responder mensajes y automatizar procesos.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button className="bg-green-600 hover:bg-green-700">Comenzar ahora</Button>
-                      <Button variant="outline" className="border-white/70 bg-white/15 text-white hover:bg-white/25">
-                        Ver tutorial
-                      </Button>
-                    </div>
-                  </div>
+                <CardContent className="space-y-3">
+                  {automations.map((action) => (
+                    <Button
+                      key={action.title}
+                      variant="outline"
+                      className="h-auto w-full justify-between border-white/15 bg-white/10 px-3 py-3 text-left text-white hover:bg-white/20 hover:text-white"
+                      asChild
+                    >
+                      <Link href={action.href}>
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-green-400/20">
+                            <action.icon className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">{action.title}</span>
+                            <span className="text-xs text-green-100">{action.state}</span>
+                          </span>
+                        </span>
+                        <ArrowRight className="h-4 w-4 shrink-0" />
+                      </Link>
+                    </Button>
+                  ))}
                 </CardContent>
               </Card>
+            </section>
 
-              {/* Tarjeta de WhatsApp */}
-              <Card className="bg-[#ffffff] border-[#cfe8d8]">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg">Mensajes de WhatsApp</CardTitle>
-                    <Badge className="bg-green-500">Conectado</Badge>
-                  </div>
-                  <CardDescription className="text-[#5f756b]">Últimos mensajes recibidos</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="bg-[#f6fbf7] p-3 rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Cliente #1</span>
-                        <span className="text-xs text-[#5f756b]">Hace 5 min</span>
-                      </div>
-                      <p className="text-sm text-[#41564a] mt-1">"Hola, ¿podemos agendar una reunión para mañana?"</p>
-                      <div className="flex justify-end mt-2">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                          Responder
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="bg-[#f6fbf7] p-3 rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Cliente #2</span>
-                        <span className="text-xs text-[#5f756b]">Hace 30 min</span>
-                      </div>
-                      <p className="text-sm text-[#41564a] mt-1">
-                        "Necesito información sobre los precios del servicio"
-                      </p>
-                      <div className="flex justify-end mt-2">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                          Responder
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full border-[#cfe8d8]" asChild>
-                    <Link href="/chat">Ver todos los mensajes</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Tarjeta de Estadísticas */}
-              <Card className="bg-[#ffffff] border-[#cfe8d8]">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Estadísticas</CardTitle>
-                  <CardDescription className="text-[#5f756b]">Resumen de actividad</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-[#5f756b]">Mensajes respondidos</p>
-                        <p className="text-2xl font-bold">24</p>
-                      </div>
-                      <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <MessageSquare className="h-6 w-6 text-green-700" />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-[#5f756b]">Tareas automatizadas</p>
-                        <p className="text-2xl font-bold">12</p>
-                      </div>
-                      <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                        <Settings className="h-6 w-6 text-emerald-700" />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-[#5f756b]">Horas ahorradas</p>
-                        <p className="text-2xl font-bold">3.5</p>
-                      </div>
-                      <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <BarChart3 className="h-6 w-6 text-green-400" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full border-[#cfe8d8]" asChild>
-                    <Link href="/estadisticas">Ver reporte completo</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Tarjeta de Acciones Rápidas */}
-              <Card className="col-span-1 md:col-span-2 bg-[#ffffff] border-[#cfe8d8]">
+            <section className="grid gap-6 lg:grid-cols-3">
+              <Card className="border-[#cfe8d8] bg-white lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
-                  <CardDescription className="text-[#5f756b]">Selecciona una acción para comenzar</CardDescription>
+                  <CardTitle>Flujo operativo</CardTitle>
+                  <CardDescription className="text-[#5f756b]">
+                    Señales clave para revisar antes de escalar automatizaciones.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Button
-                      className="h-auto py-6 flex flex-col items-center bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-                      asChild
-                    >
-                      <Link href="/chat">
-                        <MessageSquare className="h-8 w-8 mb-2" />
-                        <span>Responder mensajes</span>
-                      </Link>
-                    </Button>
-
-                    <Button className="h-auto py-6 flex flex-col items-center bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
-                      <Plus className="h-8 w-8 mb-2" />
-                      <span>Crear tarea</span>
-                    </Button>
-
-                    <Button
-                      className="h-auto py-6 flex flex-col items-center bg-gradient-to-br from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-                      asChild
-                    >
-                      <Link href="/calendario">
-                        <Calendar className="h-8 w-8 mb-2" />
-                        <span>Agendar reunión</span>
-                      </Link>
-                    </Button>
-
-                    <Button
-                      className="h-auto py-6 flex flex-col items-center bg-gradient-to-br from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
-                      asChild
-                    >
-                      <Link href="/estadisticas">
-                        <BarChart3 className="h-8 w-8 mb-2" />
-                        <span>Ver estadísticas</span>
-                      </Link>
-                    </Button>
-                    <Button
-                      className="h-auto py-6 flex flex-col items-center bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800"
-                      asChild
-                    >
-                      <Link href="/seed-database">
-                        <Database className="h-8 w-8 mb-2" />
-                        <span>Poblar Base de Datos</span>
-                      </Link>
-                    </Button>
-                  </div>
+                <CardContent className="grid gap-3 md:grid-cols-3">
+                  {[
+                    { label: "Validación de schema", value: "OK", icon: ShieldCheck },
+                    { label: "Cola de mensajes", value: "12", icon: MessageSquare },
+                    { label: "Jobs automatizados", value: "5 activos", icon: Zap },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-lg border border-[#cfe8d8] bg-[#f6fbf7] p-4">
+                      <item.icon className="mb-3 h-5 w-5 text-green-700" />
+                      <div className="text-lg font-semibold">{item.value}</div>
+                      <div className="text-sm text-[#5f756b]">{item.label}</div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
-              {/* Tarjeta de Planes */}
-              <Card className="col-span-1 md:col-span-2 bg-gradient-to-br from-[#ffffff] to-[#f6fbf7] border-[#cfe8d8]">
-                <CardHeader>
-                  <CardTitle className="text-lg">Planes disponibles</CardTitle>
-                  <CardDescription className="text-[#5f756b]">Mejora tu experiencia con SmarterOS</CardDescription>
+              <Card className="border-[#cfe8d8] bg-white">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                  <div>
+                    <CardTitle>Auditoría reciente</CardTitle>
+                    <CardDescription className="text-[#5f756b]">Últimos eventos del hub.</CardDescription>
+                  </div>
+                  <MoreHorizontal className="h-5 w-5 text-[#5f756b]" />
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-[#f6fbf7] border-[#cfe8d8]">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-md">Plan Básico</CardTitle>
-                        <CardDescription className="text-[#5f756b]">Para comenzar</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-2xl font-bold mb-4">
-                          $19<span className="text-sm font-normal text-[#5f756b]">/mes</span>
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Respuestas automáticas</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>1 canal de WhatsApp</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Soporte básico</span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                      <CardFooter>
-                        <Button className="w-full">Ver detalles</Button>
-                      </CardFooter>
-                    </Card>
-
-                    <Card className="bg-[#f6fbf7] border-green-600 relative">
-                      <div className="absolute -top-3 right-4 bg-green-600 px-3 py-1 rounded-full text-xs font-medium">
-                        Popular
+                <CardContent className="space-y-4">
+                  {auditTrail.map((item) => (
+                    <div key={`${item.event}-${item.time}`} className="flex gap-3">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium">{item.event}</div>
+                        <p className="text-xs text-[#5f756b]">{item.description}</p>
+                        <p className="mt-1 text-xs text-[#7b8d84]">{item.time}</p>
                       </div>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-md">Plan Pro</CardTitle>
-                        <CardDescription className="text-[#5f756b]">Para negocios</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-2xl font-bold mb-4">
-                          $49<span className="text-sm font-normal text-[#5f756b]">/mes</span>
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Todo lo del plan Básico</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>3 canales de WhatsApp</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Automatizaciones avanzadas</span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                      <CardFooter>
-                        <Button className="w-full bg-green-600 hover:bg-green-700">Ver detalles</Button>
-                      </CardFooter>
-                    </Card>
-
-                    <Card className="bg-[#f6fbf7] border-[#cfe8d8]">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-md">Plan Enterprise</CardTitle>
-                        <CardDescription className="text-[#5f756b]">Para grandes empresas</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-2xl font-bold mb-4">
-                          $99<span className="text-sm font-normal text-[#5f756b]">/mes</span>
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Todo lo del plan Pro</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>Canales ilimitados</span>
-                          </li>
-                          <li className="flex items-center">
-                            <ArrowRight className="h-4 w-4 mr-2 text-green-700" />
-                            <span>API personalizada</span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                      <CardFooter>
-                        <Button className="w-full">Ver detalles</Button>
-                      </CardFooter>
-                    </Card>
-                  </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
-            </div>
+            </section>
           </main>
         </div>
       </div>

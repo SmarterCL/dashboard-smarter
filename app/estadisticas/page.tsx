@@ -7,12 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getStatistics, getDailyStatistics } from "@/lib/services/statistics-service"
 
 export default async function EstadisticasPage() {
-  // Función para manejar datos faltantes en las estadísticas
-  const getSafeStatValue = (stats: any[], index: number, defaultValue = 0) => {
-    if (!stats || !stats[index]) return defaultValue
-    return stats[index].metric_value || defaultValue
-  }
-
   // Obtener estadísticas diarias
   const dailyStats = await getDailyStatistics().catch(() => ({}))
 
@@ -22,7 +16,7 @@ export default async function EstadisticasPage() {
   const hoursStats = await getStatistics("hours_saved", 7).catch(() => [])
 
   // Calcular porcentajes de cambio
-  const calculateChange = (stats: any[], metricName: string) => {
+  const calculateChange = (stats: any[]) => {
     if (stats.length < 2) return { value: 0, isPositive: true }
 
     const current = stats[stats.length - 1]?.metric_value || 0
@@ -41,19 +35,6 @@ export default async function EstadisticasPage() {
   const tasksChange = calculateChange(tasksStats, "tasks_automated")
   const hoursChange = calculateChange(hoursStats, "hours_saved")
   const responseRateChange = { value: 1.2, isPositive: false } // Ejemplo estático
-
-  // Dentro del componente
-  const messageValues = messagesStats.map((stat, i) => ({
-    value: stat.metric_value,
-    day: new Date(stat.date_recorded).toLocaleDateString("es-CL", { weekday: "short" }).charAt(0),
-  }))
-
-  // Si no hay suficientes datos, rellenar con valores por defecto
-  const days = ["L", "M", "X", "J", "V", "S", "D"]
-  const filledMessageValues = days.map((day) => {
-    const existingDay = messageValues.find((m) => m.day === day)
-    return existingDay ? existingDay.value : 0
-  })
 
   return (
     <div className="flex-1 p-6">

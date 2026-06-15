@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { seedDatabase } from "@/lib/seed-data"
 
 // Añadir verificación de método para evitar llamadas no autorizadas
-export async function GET(request: NextRequest) {
+export async function GET() {
   // En producción, deberíamos verificar algún tipo de autenticación
   // const isAuthorized = checkAuthorization(request);
   // if (!isAuthorized) {
