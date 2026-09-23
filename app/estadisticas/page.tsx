@@ -31,9 +31,9 @@ export default async function EstadisticasPage() {
     }
   }
 
-  const messagesChange = calculateChange(messagesStats, "messages_responded")
-  const tasksChange = calculateChange(tasksStats, "tasks_automated")
-  const hoursChange = calculateChange(hoursStats, "hours_saved")
+  const messagesChange = calculateChange(messagesStats)
+  const tasksChange = calculateChange(tasksStats)
+  const hoursChange = calculateChange(hoursStats)
   const responseRateChange = { value: 1.2, isPositive: false } // Ejemplo estático
 
   return (

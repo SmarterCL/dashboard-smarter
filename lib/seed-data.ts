@@ -9,6 +9,7 @@ export async function seedDatabase() {
   try {
     // Crear clientes de ejemplo
     const client1 = await createClient({
+      organization_id: null,
       name: "Carlos Rodríguez",
       email: "carlos@ejemplo.com",
       phone: "+56 9 1234 5678",
@@ -17,6 +18,7 @@ export async function seedDatabase() {
     })
 
     const client2 = await createClient({
+      organization_id: null,
       name: "María González",
       email: "maria@ejemplo.com",
       phone: "+56 9 8765 4321",
@@ -25,6 +27,7 @@ export async function seedDatabase() {
     })
 
     const client3 = await createClient({
+      organization_id: null,
       name: "Juan Pérez",
       email: "juan@ejemplo.com",
       phone: "+56 9 2468 1357",
@@ -33,6 +36,7 @@ export async function seedDatabase() {
     })
 
     const client4 = await createClient({
+      organization_id: null,
       name: "Ana Silva",
       email: "ana@ejemplo.com",
       phone: "+56 9 1357 2468",
@@ -41,6 +45,7 @@ export async function seedDatabase() {
     })
 
     const client5 = await createClient({
+      organization_id: null,
       name: "Roberto Muñoz",
       email: "roberto@ejemplo.com",
       phone: "+56 9 9876 5432",
@@ -50,6 +55,7 @@ export async function seedDatabase() {
 
     // Crear mensajes de WhatsApp de ejemplo
     await sendWhatsAppMessage({
+      organization_id: null,
       client_id: client1.id,
       direction: "incoming",
       content: "Hola, ¿podemos agendar una reunión para mañana?",
@@ -58,6 +64,7 @@ export async function seedDatabase() {
     })
 
     await sendWhatsAppMessage({
+      organization_id: null,
       client_id: client2.id,
       direction: "incoming",
       content: "Necesito información sobre los precios del servicio",
@@ -66,6 +73,7 @@ export async function seedDatabase() {
     })
 
     await sendWhatsAppMessage({
+      organization_id: null,
       client_id: client2.id,
       direction: "outgoing",
       content: "Claro, te envío el detalle de precios a continuación...",
@@ -80,6 +88,7 @@ export async function seedDatabase() {
     const day = now.getDate()
 
     const event1 = await createCalendarEvent({
+      organization_id: null,
       title: "Reunión con Cliente",
       description: "Presentación de propuesta comercial",
       start_time: new Date(year, month, day, 10, 0, 0).toISOString(),
@@ -97,6 +106,7 @@ export async function seedDatabase() {
     })
 
     const event2 = await createCalendarEvent({
+      organization_id: null,
       title: "Llamada de seguimiento",
       description: "Seguimiento de proyecto en curso",
       start_time: new Date(year, month, day + 1, 14, 30, 0).toISOString(),
@@ -114,6 +124,7 @@ export async function seedDatabase() {
     })
 
     const event3 = await createCalendarEvent({
+      organization_id: null,
       title: "Entrega de propuesta",
       description: "Finalizar y enviar propuesta comercial",
       start_time: new Date(year, month, day + 2, 9, 0, 0).toISOString(),

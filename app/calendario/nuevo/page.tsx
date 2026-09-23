@@ -46,6 +46,7 @@ export default function NuevoEventoPage() {
       const endDateTime = new Date(`${formData.end_date}T${formData.end_time}:00`)
 
       await createCalendarEvent({
+        organization_id: null,
         title: formData.title,
         description: formData.description || null,
         start_time: startDateTime.toISOString(),

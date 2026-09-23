@@ -12,22 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCalendarEvents } from "@/lib/services/calendar-service"
+import { generateDaysOfMonth } from "@/lib/utils/calendar-utils"
 import Link from "next/link"
-
-// Memoizar la generación de días del mes para evitar recálculos innecesarios
-export const generateDaysOfMonth = (year: number, month: number) => {
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const daysInMonth = lastDay.getDate()
-
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
-
-  return {
-    days,
-    firstDayOfWeek: firstDay.getDay(), // 0 = Sunday, 1 = Monday, etc.
-    daysInMonth,
-  }
-}
 
 // Función para formatear fecha
 const formatDate = (date: Date) => {

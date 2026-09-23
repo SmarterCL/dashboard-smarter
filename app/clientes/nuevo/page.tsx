@@ -70,6 +70,7 @@ export default function NuevoClientePage() {
 
     try {
       await createClient({
+        organization_id: null,
         name: formData.name,
         email: formData.email || null,
         phone: formData.phone || null,

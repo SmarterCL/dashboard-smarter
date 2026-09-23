@@ -16,8 +16,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (secretos — nunca commitear)
 .env*
+# excluir el archivo de ejemplo — es público y debe estar en el repositorio
+!.env.local.example
+!.env.example
 
 # vercel
 .vercel
