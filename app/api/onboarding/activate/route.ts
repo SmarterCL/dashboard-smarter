@@ -27,6 +27,35 @@ export async function POST() {
   }
 
   try {
+    // Si no existe org (edge case: Google OAuth llegó antes de que el callback
+    // terminara de crearla, o la RPC falló silenciosamente), crearla aquí.
+    const { data: orgs } = await supabase
+      .from("organizations")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+
+    if (!orgs?.length) {
+      const company =
+        (user.user_metadata?.company as string | undefined) ??
+        (user.user_metadata?.full_name as string | undefined) ??
+        user.email?.split("@")[0] ??
+        "Mi empresa"
+
+      const { error: rpcError } = await supabase.rpc("create_my_organization", {
+        p_name: company,
+      })
+
+      // owner_org_limit = ya existe una membresía (no es error real).
+      // Cualquier otro error sí es un problema.
+      if (rpcError && !rpcError.message.includes("owner_org_limit")) {
+        return NextResponse.json(
+          { error: "No se pudo crear la organización. Intenta nuevamente." },
+          { status: 500 },
+        )
+      }
+    }
+
     const result = await bootstrapWorkspace({
       id: user.id,
       email: user.email ?? "",

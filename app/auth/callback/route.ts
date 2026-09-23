@@ -93,7 +93,15 @@ export async function GET(request: Request) {
         "Mi empresa"
 
       // Crear org vía RPC (idempotente si ya existe)
-      await supabase.rpc("create_my_organization", { p_name: company })
+      const { error: rpcError } = await supabase.rpc("create_my_organization", { p_name: company })
+
+      // "owner_org_limit" significa que ya tiene membresía (no es un error real).
+      // Para cualquier otro error, igual redirigimos al setup — el ActivateButton
+      // ahora puede crear la org si no existe al momento de activar.
+      if (rpcError && !rpcError.message.includes("owner_org_limit")) {
+        console.error("[auth/callback] create_my_organization error:", rpcError.message)
+      }
+
       return NextResponse.redirect(`${origin}/dashboard/setup`)
     }
 
