@@ -116,10 +116,13 @@ export async function validateChatwootToken(): Promise<ChatwootAccount[]> {
 }
 
 export async function getOrCreateContact(user: User, workspace: Workspace): Promise<ChatwootContact> {
-  if (workspace.chatwoot_contact_id && workspace.chatwoot_source_id) {
+  // Si ya tenemos el contact_id, reconstruir el objeto en memoria sin llamar a Chatwoot.
+  // source_id no se persiste en organizations (columna eliminada); se obtiene de Chatwoot
+  // solo cuando se necesita crear una conversación nueva.
+  if (workspace.chatwoot_contact_id) {
     return {
       id: workspace.chatwoot_contact_id,
-      source_id: workspace.chatwoot_source_id,
+      source_id: null, // se resolverá desde Chatwoot si se necesita una conversación nueva
       name: contactName(user),
       email: user.email,
       identifier: contactIdentifier(user.id),
@@ -139,9 +142,9 @@ export async function getOrCreateContact(user: User, workspace: Workspace): Prom
     }),
   })
 
+  // Solo persistir chatwoot_contact_id. chatwoot_source_id no existe en la BD.
   await updateWorkspaceOperationalFields(workspace.id, {
     chatwoot_contact_id: created.id,
-    chatwoot_source_id: created.source_id || null,
   })
 
   return created
@@ -151,7 +154,7 @@ export async function getOrCreateConversation(
   contact: ChatwootContact,
   workspace: Workspace,
 ): Promise<ChatwootConversation> {
-  if (workspace.chatwoot_conversation_id && workspace.chatwoot_source_id) {
+  if (workspace.chatwoot_conversation_id) {
     return {
       id: workspace.chatwoot_conversation_id,
       account_id: Number(chatwootConfig().accountId),
@@ -160,24 +163,23 @@ export async function getOrCreateConversation(
     }
   }
 
-  if (!contact.source_id) {
-    throw new Error("Chatwoot contact missing source_id")
-  }
-
+  // source_id del contacto: puede venir de la respuesta de Chatwoot o
+  // buscarse en contact_inboxes. Si no está disponible, crear igualmente
+  // usando contact_id (Chatwoot lo acepta sin source_id en POST /conversations).
   const config = chatwootConfig()
   const conversation = await chatwootAccountFetch<ChatwootConversation>("/conversations", {
     method: "POST",
     body: JSON.stringify({
-      source_id: contact.source_id,
+      ...(contact.source_id ? { source_id: contact.source_id } : {}),
       inbox_id: config.inboxId,
       contact_id: contact.id,
       status: "open",
     }),
   })
 
+  // Solo persiste conversation_id. chatwoot_source_id no existe en la BD.
   await updateWorkspaceOperationalFields(workspace.id, {
     chatwoot_conversation_id: conversation.id,
-    chatwoot_source_id: contact.source_id,
   })
 
   return conversation

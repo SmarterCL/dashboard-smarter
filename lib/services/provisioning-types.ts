@@ -4,17 +4,18 @@
  * IMPORTANTE: distinguir entre:
  *   - Organization (provisioning-types.ts) — modelo completo del CRM con todos
  *     los campos de estado, billing, Gmail, Chatwoot, WAHA.
- *   - Workspace (workspace-service.ts) — modelo legacy del dashboard con
- *     organization_members y trial_expires_at.
+ *   - Workspace (workspace-service.ts) — modelo legacy del dashboard, vista
+ *     ligera de organizations con solo los campos necesarios para el runtime.
  *
  * Ambos modelos apuntan a la misma tabla `organizations` en Supabase.
  * El modelo Organization es el más completo y es el que usan los servicios
  * de provisioning y el nuevo dashboard/setup.
  *
- * Columna de divergencia:
- *   - dashboard: trial_expires_at
- *   - CRM:       trial_ends_at
- *   Ambas coexisten en la BD. El código de provisioning usa trial_ends_at.
+ * Campo canónico de trial: trial_ends_at (BD).
+ * El campo trial_expires_at fue eliminado — no existe en la BD ni en el código.
+ *
+ * Memberships: tabla `memberships` (org_id, user_id, role).
+ * La tabla `organization_members` no existe en la BD.
  */
 
 export type ProvisioningStatus = "pending" | "ready" | "failed"
@@ -44,8 +45,8 @@ export type Organization = {
   waha_session_id: string | null
   waha_status: ProvisioningStatus | null
   waha_qr_status: ProvisioningStatus | null
-  // Trial (columna del CRM — trial_ends_at)
-  // Nota: el dashboard usa trial_expires_at; ambas coexisten en la BD.
+  // Trial (columna canónica en BD — trial_ends_at)
+  // El campo trial_expires_at fue eliminado del código (no existe en la BD).
   trial_started_at: string | null
   trial_ends_at: string | null
   plan_status: string | null

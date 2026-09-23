@@ -47,7 +47,7 @@ export async function bootstrapWorkspace(user: User): Promise<BootstrapWorkspace
   const workspaceWithContact = {
     ...workspace,
     chatwoot_contact_id: contact.id,
-    chatwoot_source_id: contact.source_id || workspace.chatwoot_source_id,
+    // chatwoot_source_id fue eliminado — no existe en la BD ni en el tipo Workspace
   }
 
   const conversation = await getOrCreateConversation(contact, workspaceWithContact)

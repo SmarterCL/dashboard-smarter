@@ -1,28 +1,43 @@
 import { createServerSupabaseClient } from "../supabase"
 
+/**
+ * Servicio de organizaciones — vista ligera para operaciones CRM legacy.
+ *
+ * Columnas eliminadas del tipo Organization (no existen en la BD):
+ *   - billing_email → no persiste en este esquema
+ *   - updated_at    → organizations no tiene updated_at
+ *
+ * Tabla corregida: memberships (era organization_members, que no existe en BD).
+ * Columnas reales de memberships: id, org_id, user_id, role, invited_by, created_at.
+ * Roles válidos: owner | admin | agent | viewer (según CHECK constraint en BD).
+ */
 export type Organization = {
   id: string
-  name: string
-  slug: string
-  billing_email: string | null
+  name: string | null
+  slug: string | null
   created_at: string
-  updated_at: string
 }
 
 export type OrganizationMember = {
   id: string
-  organization_id: string
+  /** Columna real en memberships: org_id (era organization_id en el código legacy) */
+  org_id: string
   user_id: string
-  role: "owner" | "admin" | "member"
+  /** Roles válidos según CHECK en BD: owner | admin | agent | viewer */
+  role: "owner" | "admin" | "agent" | "viewer"
+  invited_by: string | null
   created_at: string
 }
 
+/**
+ * Obtiene todas las organizaciones del usuario (via memberships).
+ */
 export async function getUserOrganizations(userId: string): Promise<Organization[]> {
   const supabase = createServerSupabaseClient()
 
   const { data, error } = await supabase
-    .from("organization_members")
-    .select("organizations(*)")
+    .from("memberships")
+    .select("organizations(id, name, slug, created_at)")
     .eq("user_id", userId)
 
   if (error) {
@@ -30,13 +45,19 @@ export async function getUserOrganizations(userId: string): Promise<Organization
     return []
   }
 
-  return data.map((item) => item.organizations) as unknown as Organization[]
+  return data
+    .map((item) => item.organizations)
+    .filter(Boolean) as unknown as Organization[]
 }
 
 export async function getOrganizationById(id: string): Promise<Organization | null> {
   const supabase = createServerSupabaseClient()
 
-  const { data, error } = await supabase.from("organizations").select("*").eq("id", id).single()
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id, name, slug, created_at")
+    .eq("id", id)
+    .single()
 
   if (error) {
     console.error(`Error fetching organization with id ${id}:`, error)
@@ -46,16 +67,25 @@ export async function getOrganizationById(id: string): Promise<Organization | nu
   return data
 }
 
+/**
+ * Crea una organización e inserta la membership owner.
+ *
+ * Nota: el trigger organizations_owner_membership en Supabase ya crea
+ * la membership automáticamente al insertar en organizations. Esta función
+ * la inserta explícitamente también para compatibilidad con flujos que
+ * no pasen por el RPC create_my_organization().
+ * El INSERT usa ON CONFLICT DO NOTHING para ser idempotente con el trigger.
+ */
 export async function createOrganization(
-  org: Omit<Organization, "id" | "created_at" | "updated_at">,
+  org: Pick<Organization, "name" | "slug">,
   userId: string,
 ): Promise<Organization> {
   const supabase = createServerSupabaseClient()
 
   const { data: organization, error: orgError } = await supabase
     .from("organizations")
-    .insert([org])
-    .select()
+    .insert([{ ...org, owner_id: userId }])
+    .select("id, name, slug, created_at")
     .single()
 
   if (orgError) {
@@ -63,37 +93,44 @@ export async function createOrganization(
     throw orgError
   }
 
-  // Auto-assign the creator as the owner
-  const { error: memberError } = await supabase
-    .from("organization_members")
-    .insert([
-      {
-        organization_id: organization.id,
-        user_id: userId,
-        role: "owner",
-      },
-    ])
+  // El trigger organizations_owner_membership ya creó la fila en memberships.
+  // Insertamos explícitamente con ON CONFLICT DO NOTHING para idempotencia.
+  const { error: memberError } = await supabase.from("memberships").insert([
+    {
+      org_id: organization.id,
+      user_id: userId,
+      role: "owner",
+    },
+  ])
 
-  if (memberError) {
-    console.error("Error assigning owner to organization:", memberError)
-    // You might want to rollback the organization creation here depending on strictness
+  if (memberError && memberError.code !== "23505") {
+    // 23505 = unique_violation: ya existe la membership (trigger la creó antes)
+    console.error("Error assigning owner membership to organization:", memberError)
   }
 
   return organization
 }
 
-export async function getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
+/**
+ * Obtiene los miembros de una organización desde la tabla memberships.
+ */
+export async function getOrganizationMembers(
+  organizationId: string,
+): Promise<OrganizationMember[]> {
   const supabase = createServerSupabaseClient()
 
   const { data, error } = await supabase
-    .from("organization_members")
-    .select("*")
-    .eq("organization_id", organizationId)
+    .from("memberships")
+    .select("id, org_id, user_id, role, invited_by, created_at")
+    .eq("org_id", organizationId)
 
   if (error) {
-    console.error(`Error fetching members for organization ${organizationId}:`, error)
+    console.error(
+      `Error fetching members for organization ${organizationId}:`,
+      error,
+    )
     return []
   }
 
-  return data
+  return data as OrganizationMember[]
 }

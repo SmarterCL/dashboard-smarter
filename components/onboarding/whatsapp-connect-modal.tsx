@@ -123,8 +123,8 @@ export function WhatsAppConnectModal({ open, onClose, onConnected, wahaSessionId
       return
     }
     activateIfNeeded().then(() => startPolling())
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+    // activateIfNeeded y startPolling son funciones estables (useCallback sin deps variables)
+  }, [open, activateIfNeeded, startPolling, resetAll])
 
   // Cleanup al desmontar
   useEffect(() => () => stopPolling(), [stopPolling])
